@@ -10,6 +10,7 @@ import {
   type TaskStatus,
   type ViewId,
 } from "./data";
+import { documentCategories, irapDocuments, type IrapDocument } from "./irapDocuments";
 
 const MEETING_AT = new Date("2026-07-16T12:00:00-04:00");
 const STATUS_ORDER: TaskStatus[] = ["todo", "progress", "done"];
@@ -169,6 +170,7 @@ export function PrepHub() {
           {view === "architecture" && <Architecture />}
           {view === "research" && <Research />}
           {view === "funding" && <Funding />}
+          {view === "documents" && <DocumentVault />}
           {view === "call" && <CallRoom notes={notes} setNotes={setNotes} startMeeting={() => setMeetingMode(true)} />}
           {view === "actions" && <ActionCentre statuses={statuses} cycleTask={cycleTask} notes={notes} setNotes={setNotes} />}
         </div>
@@ -203,6 +205,74 @@ export function PrepHub() {
         </div>
       )}
     </div>
+  );
+}
+
+async function downloadDocument(document: IrapDocument) {
+  if (!document.sections) return;
+  const { jsPDF } = await import("jspdf");
+  const pdf = new jsPDF({ unit: "pt", format: "letter" });
+  const margin = 54;
+  const width = pdf.internal.pageSize.getWidth() - margin * 2;
+  const height = pdf.internal.pageSize.getHeight();
+  let y = 62;
+  const addFooter = () => {
+    const page = pdf.getNumberOfPages();
+    pdf.setFont("helvetica", "normal"); pdf.setFontSize(8); pdf.setTextColor(110, 116, 128);
+    pdf.text("Opyjo Inc. | IRAP working document", margin, height - 28);
+    pdf.text(String(page), pdf.internal.pageSize.getWidth() - margin, height - 28, { align: "right" });
+  };
+  const newPage = () => { addFooter(); pdf.addPage(); y = 58; };
+  pdf.setFillColor(18, 31, 53); pdf.rect(0, 0, pdf.internal.pageSize.getWidth(), 148, "F");
+  pdf.setTextColor(218, 159, 57); pdf.setFontSize(9); pdf.setFont("helvetica", "bold"); pdf.text(document.category.toUpperCase(), margin, 49);
+  pdf.setTextColor(255, 255, 255); pdf.setFontSize(23); pdf.text(pdf.splitTextToSize(document.title, width), margin, 82);
+  pdf.setFont("helvetica", "normal"); pdf.setFontSize(9); pdf.setTextColor(190, 199, 213); pdf.text(`Prepared for NRC IRAP discussion | ${new Date().toLocaleDateString("en-CA")}`, margin, 130);
+  y = 185;
+  for (const section of document.sections) {
+    const body = pdf.splitTextToSize(section.body, width);
+    const needed = 35 + body.length * 14;
+    if (y + needed > height - 55) newPage();
+    pdf.setTextColor(33, 43, 59); pdf.setFont("helvetica", "bold"); pdf.setFontSize(13); pdf.text(section.heading, margin, y);
+    y += 20; pdf.setFont("helvetica", "normal"); pdf.setFontSize(10); pdf.setTextColor(76, 85, 99); pdf.text(body, margin, y, { lineHeightFactor: 1.45 });
+    y += body.length * 14.5 + 19;
+  }
+  addFooter();
+  pdf.save(`Opyjo-${document.id}.pdf`);
+}
+
+function DocumentVault() {
+  const [busy, setBusy] = useState<string | null>(null);
+  const generated = irapDocuments.filter((document) => document.generated);
+  async function download(document: IrapDocument) {
+    setBusy(document.id);
+    try { await downloadDocument(document); } finally { setBusy(null); }
+  }
+  async function downloadAll() {
+    setBusy("all");
+    try { for (const document of generated) await downloadDocument(document); } finally { setBusy(null); }
+  }
+  return (
+    <>
+      <SectionHeader eyebrow="IRAP document vault" title="Build the file before the project asks for it." description="The full progression-stage checklist is here. Generated downloads are intentionally limited to Financial, R&D Project, and Business Context—employment, payroll, legal, and claim evidence must come from source records." />
+      <section className="document-hero">
+        <div><Badge tone="gold">12 generated drafts</Badge><h2>IRAP working-document pack</h2><p>Each PDF is pre-populated with the current Opyjo adaptive-engine case and includes the sections needed to turn assumptions into submission-ready evidence.</p></div>
+        <button className="light-button" disabled={busy !== null} onClick={downloadAll}>{busy === "all" ? "Preparing PDFs…" : "Download all 12 PDFs"}</button>
+      </section>
+      <div className="vault-note"><strong>Before submission:</strong> replace planning language with verified figures, dates, names, source attachments, and advisor-confirmed eligibility. These are working drafts, not official NRC forms.</div>
+      <section className="vault-groups">
+        {documentCategories.map((category) => {
+          const documents = irapDocuments.filter((document) => document.category === category);
+          const canGenerate = documents.some((document) => document.generated);
+          return <article className="vault-group" key={category}>
+            <div className="vault-heading"><div><span>{String(documentCategories.indexOf(category) + 1).padStart(2, "0")}</span><h2>{category}</h2></div><Badge tone={canGenerate ? "green" : "neutral"}>{canGenerate ? "PDF drafts available" : "Source evidence only"}</Badge></div>
+            <div className="vault-list">{documents.map((document) => <div key={document.id} className={document.generated ? "generatable" : ""}>
+              <i>{document.generated ? "PDF" : "FILE"}</i><div><strong>{document.title}</strong><p>{document.description}</p></div>
+              {document.generated ? <button disabled={busy !== null} onClick={() => download(document)}>{busy === document.id ? "Preparing…" : "Download PDF"}</button> : <span className="source-only">Collect original</span>}
+            </div>)}</div>
+          </article>;
+        })}
+      </section>
+    </>
   );
 }
 
