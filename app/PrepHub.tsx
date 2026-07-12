@@ -242,7 +242,9 @@ async function downloadDocument(document: IrapDocument) {
 
 function DocumentVault() {
   const [busy, setBusy] = useState<string | null>(null);
+  const [preview, setPreview] = useState<IrapDocument | null>(null);
   const generated = irapDocuments.filter((document) => document.generated);
+  const sourceDocuments = irapDocuments.filter((document) => !document.generated);
   async function download(document: IrapDocument) {
     setBusy(document.id);
     try { await downloadDocument(document); } finally { setBusy(null); }
@@ -253,25 +255,39 @@ function DocumentVault() {
   }
   return (
     <>
-      <SectionHeader eyebrow="IRAP document vault" title="Build the file before the project asks for it." description="The full progression-stage checklist is here. Generated downloads are intentionally limited to Financial, R&D Project, and Business Context—employment, payroll, legal, and claim evidence must come from source records." />
+      <SectionHeader eyebrow="Document workspace" title="Your IRAP documents, ready to review." description="Read every prepared document in the hub, then download a polished PDF when it is ready. Source records remain clearly separated below." />
       <section className="document-hero">
-        <div><Badge tone="gold">12 generated drafts</Badge><h2>IRAP working-document pack</h2><p>Each PDF is pre-populated with the current Opyjo adaptive-engine case and includes the sections needed to turn assumptions into submission-ready evidence.</p></div>
-        <button className="light-button" disabled={busy !== null} onClick={downloadAll}>{busy === "all" ? "Preparing PDFs…" : "Download all 12 PDFs"}</button>
+        <div><span className="document-count">12</span><div><h2>Prepared working documents</h2><p>Financial, R&D, and business-context drafts based on the current Opyjo project case.</p></div></div>
+        <button className="primary-button" disabled={busy !== null} onClick={downloadAll}>{busy === "all" ? "Preparing PDFs…" : "Download document pack"}</button>
       </section>
       <div className="vault-note"><strong>Before submission:</strong> replace planning language with verified figures, dates, names, source attachments, and advisor-confirmed eligibility. These are working drafts, not official NRC forms.</div>
+      <div className="vault-section-title"><div><span>Prepared documents</span><h2>Read and download</h2></div><p>{generated.length} documents</p></div>
+      <section className="prepared-grid">
+        {generated.map((document) => <article className="document-card" key={document.id}>
+          <div className="document-card-top"><span>{document.category}</span><i>DOC</i></div>
+          <h3>{document.title}</h3><p>{document.description}</p>
+          <div className="document-card-actions"><button className="read-button" onClick={() => setPreview(document)}>Read document</button><button className="download-button" disabled={busy !== null} onClick={() => download(document)} aria-label={`Download ${document.title}`}>↓</button></div>
+        </article>)}
+      </section>
+      <div className="vault-section-title source-title"><div><span>Required source records</span><h2>Collect and retain</h2></div><p>{sourceDocuments.length} items</p></div>
       <section className="vault-groups">
-        {documentCategories.map((category) => {
-          const documents = irapDocuments.filter((document) => document.category === category);
-          const canGenerate = documents.some((document) => document.generated);
+        {documentCategories.filter((category) => sourceDocuments.some((document) => document.category === category)).map((category) => {
+          const documents = sourceDocuments.filter((document) => document.category === category);
           return <article className="vault-group" key={category}>
-            <div className="vault-heading"><div><span>{String(documentCategories.indexOf(category) + 1).padStart(2, "0")}</span><h2>{category}</h2></div><Badge tone={canGenerate ? "green" : "neutral"}>{canGenerate ? "PDF drafts available" : "Source evidence only"}</Badge></div>
-            <div className="vault-list">{documents.map((document) => <div key={document.id} className={document.generated ? "generatable" : ""}>
-              <i>{document.generated ? "PDF" : "FILE"}</i><div><strong>{document.title}</strong><p>{document.description}</p></div>
-              {document.generated ? <button disabled={busy !== null} onClick={() => download(document)}>{busy === document.id ? "Preparing…" : "Download PDF"}</button> : <span className="source-only">Collect original</span>}
+            <div className="vault-heading"><div><span>{String(documentCategories.indexOf(category) + 1).padStart(2, "0")}</span><h2>{category}</h2></div><Badge tone="neutral">Source evidence</Badge></div>
+            <div className="vault-list">{documents.map((document) => <div key={document.id}>
+              <i>FILE</i><div><strong>{document.title}</strong><p>{document.description}</p></div><span className="source-only">Collect original</span>
             </div>)}</div>
           </article>;
         })}
       </section>
+      {preview && <div className="reader-overlay" role="dialog" aria-modal="true" aria-label={preview.title} onMouseDown={(event) => { if (event.target === event.currentTarget) setPreview(null); }}>
+        <article className="document-reader">
+          <header><div><span>{preview.category}</span><h2>{preview.title}</h2><p>Opyjo Inc. · IRAP working document</p></div><button onClick={() => setPreview(null)} aria-label="Close document">×</button></header>
+          <main>{preview.sections?.map((section) => <section key={section.heading}><h3>{section.heading}</h3><p>{section.body}</p></section>)}</main>
+          <footer><span>Review the content before using it externally.</span><button disabled={busy !== null} onClick={() => download(preview)}>{busy === preview.id ? "Preparing…" : "Download PDF"}</button></footer>
+        </article>
+      </div>}
     </>
   );
 }
