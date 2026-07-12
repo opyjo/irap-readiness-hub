@@ -1,0 +1,905 @@
+%PDF-1.3
+%ºß¬à
+3 0 obj
+<</Type /Page
+/Parent 1 0 R
+/Resources 2 0 R
+/MediaBox [0 0 612. 792.]
+/Contents 4 0 R
+>>
+endobj
+4 0 obj
+<<
+/Length 4475
+>>
+stream
+0.200025 w
+0 G
+0.07 0.12 0.21 rg
+0. 792. 612. -148. re
+f
+BT
+/F2 9 Tf
+10.3499999999999996 TL
+0.855 0.624 0.224 rg
+54. 743. Td
+(R&D PROJECT) Tj
+ET
+BT
+/F2 23 Tf
+26.4499999999999993 TL
+1. g
+54. 710. Td
+(Formal R&D project proposal / statement of) Tj
+T* (work) Tj
+ET
+BT
+/F1 9 Tf
+10.3499999999999996 TL
+0.745 g
+54. 662. Td
+(Prepared for NRC IRAP discussion | 2026-07-12) Tj
+ET
+BT
+/F2 13 Tf
+14.9499999999999993 TL
+0.129 0.169 0.231 rg
+54. 607. Td
+(Project objective) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 585. Td
+(Opyjo Inc. will determine whether a privacy-preserving, content-agnostic adaptive engine can infer reliable learner state from) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 570.5 Td
+(sparse outcomes and select practice that improves durable learning across tenants.) Tj
+ET
+BT
+/F2 13 Tf
+14.9499999999999993 TL
+0.129 0.169 0.231 rg
+54. 537. Td
+(Technical uncertainties) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 515. Td
+(The project will test sparse-data mastery estimation, correction of item-difficulty priors from behaviour, durable) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 500.5 Td
+(outcome improvement over a fixed baseline, and safe generalization across different curricula and traffic patterns.) Tj
+ET
+BT
+/F2 13 Tf
+14.9499999999999993 TL
+0.129 0.169 0.231 rg
+54. 467. Td
+(Systematic work) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 445. Td
+(WP1 compares EWMA, Elo/IRT and confidence-weighted learner models. WP2 develops empirical item calibration) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 430.5 Td
+(and drift controls. WP3 conducts a stable adaptive-versus-baseline outcome experiment. WP4 validates isolation,) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 416. Td
+(latency, coverage and mapping with external tenants.) Tj
+ET
+BT
+/F2 13 Tf
+14.9499999999999993 TL
+0.129 0.169 0.231 rg
+54. 382.5 Td
+(Milestones and deliverables) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 360.5 Td
+(M1 model-selection report and versioned parameters \(Month 3\); M2 calibration pipeline and review thresholds) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 346. Td
+(\(Month 5\); M3 controlled outcome report \(Month 8\); M4 external-tenant validation and onboarding playbook \(Month) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 331.5 Td
+(10\).) Tj
+ET
+BT
+/F2 13 Tf
+14.9499999999999993 TL
+0.129 0.169 0.231 rg
+54. 298. Td
+(Success measures) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 276. Td
+(Calibration error, log-loss, cold-start accuracy, prior-versus-observed difficulty error, delayed retention,) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 261.5 Td
+(time-to-mastery, recommendation coverage, p95 latency, tenant-isolation tests, and reproducible model decisions.) Tj
+ET
+BT
+/F2 13 Tf
+14.9499999999999993 TL
+0.129 0.169 0.231 rg
+54. 228. Td
+(Starting point and advancement sought) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 206. Td
+(VERIFIED FROM REPOSITORY \(July 12, 2026\)) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 191.5 Td
+(Product: standalone, content-agnostic, multi-tenant adaptive-learning API.) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 177. Td
+(Runtime: Node.js 24, TypeScript 5.9, Fastify 5, PostgreSQL 17 locally; Docker image and Railway deployment) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 162.5 Td
+(configuration are present.) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 148. Td
+(Validation: 16 automated tests pass; 3 database integration tests are defined but skipped without) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 133.5 Td
+(TEST_DATABASE_URL. TypeScript build and ESLint pass.) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 119. Td
+(Current status: code-complete and locally validated. Production deployment, managed-database migration) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 104.5 Td
+(execution, restore/load/privacy testing, Brightwick shadow integration, and learning-outcome validation must not) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 90. Td
+(be represented as complete until evidence exists.) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 61. Td
+(The baseline adaptive-v1 model is a difficulty-weighted EWMA beginning at 0.5 with learning rate 0.15. It scaffolds) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.431 g
+54. 28. Td
+(Opyjo Inc. | IRAP working document) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.431 g
+553.6000000000000227 28. Td
+(1) Tj
+ET
+endstream
+endobj
+5 0 obj
+<</Type /Page
+/Parent 1 0 R
+/Resources 2 0 R
+/MediaBox [0 0 612. 792.]
+/Contents 6 0 R
+>>
+endobj
+6 0 obj
+<<
+/Length 5985
+>>
+stream
+0.200025 w
+0 G
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 734. Td
+(after two consecutive wrong answers, targets the weakest skill below 0.8, otherwise spirals the least recently) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 719.5 Td
+(practised skill, maps mastery to difficulty bands, and avoids the last 30 items or 14 days where possible. This is an) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 705. Td
+(engineered hypothesis—not yet evidence of accurate learner inference or durable learning gains.) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 676. Td
+(Advancement sought: a confidence-aware, empirically calibrated, privacy-preserving learner-and-item decision) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 661.5 Td
+(system that remains reliable with sparse data and heterogeneous tenant curricula, supported by reproducible) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 647. Td
+(outcome evidence.) Tj
+ET
+BT
+/F2 13 Tf
+14.9499999999999993 TL
+0.129 0.169 0.231 rg
+54. 613.5 Td
+(WP1 - Sparse-data learner model) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 591.5 Td
+(Question: can learner state be estimated reliably before enough responses exist for conventional calibration?) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 577. Td
+(Compare adaptive-v1 EWMA against Elo/IRT-inspired and confidence-weighted alternatives using replay) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 562.5 Td
+(simulation and, when available, prospective data. Define train/validation separation, cold-start cohorts,) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 548. Td
+(missing-data handling, versioned parameters, and rollback. Acceptance evidence: log-loss/Brier score, calibration) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 533.5 Td
+(error, ranking stability, uncertainty coverage, and observations-to-stability by cohort. Deliverable: model-selection) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 519. Td
+(report, code, parameter registry, limitations, and decision.) Tj
+ET
+BT
+/F2 13 Tf
+14.9499999999999993 TL
+0.129 0.169 0.231 rg
+54. 485.5 Td
+(WP2 - Empirical item difficulty) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 463.5 Td
+(Question: can tenant-supplied 1-5 difficulty priors be corrected without overreacting to biased or low-volume) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 449. Td
+(behaviour? Estimate performance conditional on learner state; define minimum samples, confidence intervals,) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 434.5 Td
+(shrinkage, drift monitoring, tenant/global pooling rules, and human-review thresholds. Acceptance evidence:) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 420. Td
+(prior-versus-observed error, held-out predictive improvement, recalibration stability, drift false-positive rate, and) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 405.5 Td
+(documented failure cases. Deliverable: versioned calibration pipeline and audit report.) Tj
+ET
+BT
+/F2 13 Tf
+14.9499999999999993 TL
+0.129 0.169 0.231 rg
+54. 372. Td
+(WP3 - Durable outcome experiment) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 350. Td
+(Question: does adaptive-v1 or its successor improve retained learning rather than only immediate correctness or) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 335.5 Td
+(engagement? Use stable learner assignment and an agreed baseline; pre-register primary outcome,) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 321. Td
+(delayed-review window, exclusions, sample-size rationale, stopping rules, guardrails, and analysis. Primary) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 306.5 Td
+(candidates: delayed retention and time-to-mastery. Guardrails: completion, error streak, fallback rate, latency,) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 292. Td
+(support incidents, and subgroup harm. Deliverable: reproducible analysis and promote/revise/rollback decision.) Tj
+ET
+BT
+/F2 13 Tf
+14.9499999999999993 TL
+0.129 0.169 0.231 rg
+54. 258.5 Td
+(WP4 - Cross-tenant validation) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 236.5 Td
+(Question: does the content-agnostic model remain useful and safe across different skill taxonomies, banks,) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 222. Td
+(volumes, and integration patterns? Onboard 3-5 design partners using metadata-only contracts and opaque IDs.) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 207.5 Td
+(Test mapping quality, recommendation coverage, tenant isolation, retry/idempotency, latency, outage fallback,) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 193. Td
+(deletion/export procedures, and integration time. Deliverable: partner evidence, hardened onboarding playbook,) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 178.5 Td
+(limitations, and commercial-readiness decision.) Tj
+ET
+BT
+/F2 13 Tf
+14.9499999999999993 TL
+0.129 0.169 0.231 rg
+54. 145. Td
+(Milestones, governance, and Canadian benefit) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 123. Td
+(M1 Month 1: experimental protocol and baseline evidence pack. M2 Month 3: WP1 decision. M3 Month 5: WP2) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 108.5 Td
+(calibrated pipeline. M4 Month 8: WP3 outcome report. M5 Month 10: WP4 validation and commercialization gate.) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 94. Td
+(Monthly technical reviews retain hypotheses, commits, datasets, results, failures, timesheets, and decisions.) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 79.5 Td
+(Expected Canadian benefit must be completed with verified numbers: [INPUT] Canadian R&D jobs) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 65. Td
+(retained/created, [INPUT] revenue/export potential, Canadian-owned IP position, and new in-house) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.431 g
+54. 28. Td
+(Opyjo Inc. | IRAP working document) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.431 g
+553.6000000000000227 28. Td
+(2) Tj
+ET
+endstream
+endobj
+7 0 obj
+<</Type /Page
+/Parent 1 0 R
+/Resources 2 0 R
+/MediaBox [0 0 612. 792.]
+/Contents 8 0 R
+>>
+endobj
+8 0 obj
+<<
+/Length 2183
+>>
+stream
+0.200025 w
+0 G
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 734. Td
+(modelling/security capability.) Tj
+ET
+BT
+/F2 13 Tf
+14.9499999999999993 TL
+0.129 0.169 0.231 rg
+54. 700.5 Td
+(Submission completion) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 678.5 Td
+(SUBMISSION INPUTS STILL REQUIRED) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 664. Td
+([INPUT] Legal corporation name, incorporation jurisdiction/date, CRA business number, registered address, fiscal) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 649.5 Td
+(year-end, and ownership percentages.) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 635. Td
+([INPUT] Project start/end dates and the ITA-approved scope.) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 620.5 Td
+([INPUT] Named project personnel, Canadian work location, employment status, salary, productive-hours method,) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 606. Td
+(and monthly project hours.) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 591.5 Td
+([INPUT] Actual historical financial statements, bank balances, financing commitments, tax balances, and monthly) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 577. Td
+(forecast assumptions.) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 562.5 Td
+([INPUT] Current customers/revenue, interview evidence, pipeline, pricing validation, market-source citations, and) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 548. Td
+(signed partner evidence.) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 533.5 Td
+([INPUT] Requested contribution, confirmed eligible-cost treatment, claim frequency, and other government) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 519. Td
+(assistance.) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 504.5 Td
+(These fields must be completed from source records. The application must not substitute estimates for verified) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.298 0.333 0.388 rg
+54. 490. Td
+(facts without labelling them as assumptions.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.431 g
+54. 28. Td
+(Opyjo Inc. | IRAP working document) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.431 g
+553.6000000000000227 28. Td
+(3) Tj
+ET
+endstream
+endobj
+1 0 obj
+<</Type /Pages
+/Kids [3 0 R 5 0 R 7 0 R ]
+/Count 3
+>>
+endobj
+9 0 obj
+<<
+/Type /Font
+/BaseFont /Helvetica
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+10 0 obj
+<<
+/Type /Font
+/BaseFont /Helvetica-Bold
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+11 0 obj
+<<
+/Type /Font
+/BaseFont /Helvetica-Oblique
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+12 0 obj
+<<
+/Type /Font
+/BaseFont /Helvetica-BoldOblique
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+13 0 obj
+<<
+/Type /Font
+/BaseFont /Courier
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+14 0 obj
+<<
+/Type /Font
+/BaseFont /Courier-Bold
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+15 0 obj
+<<
+/Type /Font
+/BaseFont /Courier-Oblique
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+16 0 obj
+<<
+/Type /Font
+/BaseFont /Courier-BoldOblique
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+17 0 obj
+<<
+/Type /Font
+/BaseFont /Times-Roman
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+18 0 obj
+<<
+/Type /Font
+/BaseFont /Times-Bold
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+19 0 obj
+<<
+/Type /Font
+/BaseFont /Times-Italic
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+20 0 obj
+<<
+/Type /Font
+/BaseFont /Times-BoldItalic
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+21 0 obj
+<<
+/Type /Font
+/BaseFont /ZapfDingbats
+/Subtype /Type1
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+22 0 obj
+<<
+/Type /Font
+/BaseFont /Symbol
+/Subtype /Type1
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+2 0 obj
+<<
+/ProcSet [/PDF /Text /ImageB /ImageC /ImageI]
+/Font <<
+/F1 9 0 R
+/F2 10 0 R
+/F3 11 0 R
+/F4 12 0 R
+/F5 13 0 R
+/F6 14 0 R
+/F7 15 0 R
+/F8 16 0 R
+/F9 17 0 R
+/F10 18 0 R
+/F11 19 0 R
+/F12 20 0 R
+/F13 21 0 R
+/F14 22 0 R
+>>
+/XObject <<
+>>
+>>
+endobj
+23 0 obj
+<<
+/Producer (jsPDF 4.2.1)
+/CreationDate (D:20260712181821-04'00')
+>>
+endobj
+24 0 obj
+<<
+/Type /Catalog
+/Pages 1 0 R
+/OpenAction [3 0 R /FitH null]
+/PageLayout /OneColumn
+>>
+endobj
+xref
+0 25
+0000000000 65535 f 
+0000013129 00000 n 
+0000014962 00000 n 
+0000000015 00000 n 
+0000000120 00000 n 
+0000004647 00000 n 
+0000004752 00000 n 
+0000010789 00000 n 
+0000010894 00000 n 
+0000013198 00000 n 
+0000013323 00000 n 
+0000013454 00000 n 
+0000013588 00000 n 
+0000013726 00000 n 
+0000013850 00000 n 
+0000013979 00000 n 
+0000014111 00000 n 
+0000014247 00000 n 
+0000014375 00000 n 
+0000014502 00000 n 
+0000014631 00000 n 
+0000014764 00000 n 
+0000014866 00000 n 
+0000015214 00000 n 
+0000015300 00000 n 
+trailer
+<<
+/Size 25
+/Root 24 0 R
+/Info 23 0 R
+/ID [ <9002D5F7B3AF1B4BD4539AD492E03BDC> <9002D5F7B3AF1B4BD4539AD492E03BDC> ]
+>>
+startxref
+15404
+%%EOF

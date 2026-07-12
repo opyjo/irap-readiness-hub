@@ -444,7 +444,7 @@ a { color: inherit; }
 .document-reader > main section { padding: 24px 0; border-bottom: 1px solid var(--line); }
 .document-reader > main section:last-child { border: 0; }
 .document-reader > main h3 { margin: 0 0 10px; font-size: 16px; }
-.document-reader > main p { margin: 0; color: #4f5c70; font-size: 13px; line-height: 1.8; }
+.document-reader > main p { margin: 0; color: #4f5c70; font-size: 13px; line-height: 1.8; white-space: pre-line; }
 .document-reader > footer { display: flex; align-items: center; justify-content: space-between; padding: 16px 34px; border-top: 1px solid var(--line); background: #fafbfc; }
 .document-reader > footer span { color: var(--muted); font-size: 9px; }
 .document-reader > footer button { padding: 10px 15px; border: 0; border-radius: 7px; background: var(--blue); color: white; cursor: pointer; font-size: 10px; font-weight: 750; }

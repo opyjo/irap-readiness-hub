@@ -229,12 +229,15 @@ async function downloadDocument(document: IrapDocument) {
   pdf.setFont("helvetica", "normal"); pdf.setFontSize(9); pdf.setTextColor(190, 199, 213); pdf.text(`Prepared for NRC IRAP discussion | ${new Date().toLocaleDateString("en-CA")}`, margin, 130);
   y = 185;
   for (const section of document.sections) {
-    const body = pdf.splitTextToSize(section.body, width);
-    const needed = 35 + body.length * 14;
-    if (y + needed > height - 55) newPage();
+    const body = pdf.splitTextToSize(section.body, width) as string[];
+    if (y + 55 > height - 55) newPage();
     pdf.setTextColor(33, 43, 59); pdf.setFont("helvetica", "bold"); pdf.setFontSize(13); pdf.text(section.heading, margin, y);
-    y += 20; pdf.setFont("helvetica", "normal"); pdf.setFontSize(10); pdf.setTextColor(76, 85, 99); pdf.text(body, margin, y, { lineHeightFactor: 1.45 });
-    y += body.length * 14.5 + 19;
+    y += 22; pdf.setFont("helvetica", "normal"); pdf.setFontSize(10); pdf.setTextColor(76, 85, 99);
+    for (const line of body) {
+      if (y > height - 55) { newPage(); pdf.setFont("helvetica", "normal"); pdf.setFontSize(10); pdf.setTextColor(76, 85, 99); }
+      pdf.text(line, margin, y); y += 14.5;
+    }
+    y += 19;
   }
   addFooter();
   pdf.save(`Opyjo-${document.id}.pdf`);
@@ -257,7 +260,7 @@ function DocumentVault() {
     <>
       <SectionHeader eyebrow="Document workspace" title="Your IRAP documents, ready to review." description="Read every prepared document in the hub, then download a polished PDF when it is ready. Source records remain clearly separated below." />
       <section className="document-hero">
-        <div><span className="document-count">12</span><div><h2>Prepared working documents</h2><p>Financial, R&D, and business-context drafts based on the current Opyjo project case.</p></div></div>
+        <div><span className="document-count">{generated.length}</span><div><h2>Prepared working documents</h2><p>Financial, R&D, and business-context drafts based on the current Opyjo project case.</p></div></div>
         <button className="primary-button" disabled={busy !== null} onClick={downloadAll}>{busy === "all" ? "Preparing PDFs…" : "Download document pack"}</button>
       </section>
       <div className="vault-note"><strong>Before submission:</strong> replace planning language with verified figures, dates, names, source attachments, and advisor-confirmed eligibility. These are working drafts, not official NRC forms.</div>
