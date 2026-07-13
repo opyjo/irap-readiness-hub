@@ -11,6 +11,7 @@ import {
   type ViewId,
 } from "./data";
 import { documentCategories, irapDocuments, type IrapDocument } from "./irapDocuments";
+import { cad, calculate, defaults, normalize, type EstimateInputs, type ScenarioId } from "./estimates";
 
 const MEETING_AT = new Date("2026-07-16T12:00:00-04:00");
 const STATUS_ORDER: TaskStatus[] = ["todo", "progress", "done"];
@@ -65,6 +66,8 @@ export function PrepHub() {
     Object.fromEntries(prepTasks.map((task) => [task.id, task.initialStatus])),
   );
   const [notes, setNotes] = useState("");
+  const [scenario, setScenario] = useState<ScenarioId>("base");
+  const [estimates, setEstimates] = useState<Record<ScenarioId, EstimateInputs>>(defaults);
   const countdown = useCountdown();
 
   useEffect(() => {
@@ -72,10 +75,12 @@ export function PrepHub() {
       const storedStatuses = window.localStorage.getItem("irap-task-statuses");
       const storedNotes = window.localStorage.getItem("irap-meeting-notes");
       const hash = window.location.hash.replace("#", "") as ViewId;
+      const storedEstimates = window.localStorage.getItem("irap-estimates");
       if (storedStatuses) {
         try { setStatuses((current) => ({ ...current, ...JSON.parse(storedStatuses) })); } catch { /* ignore invalid local data */ }
       }
       if (storedNotes) setNotes(storedNotes);
+      if (storedEstimates) { try { const saved = JSON.parse(storedEstimates); setScenario(saved.scenario ?? "base"); setEstimates({ ...defaults, ...saved.estimates }); } catch { /* ignore */ } }
       if (navGroups.some((group) => group.items.some((item) => item.id === hash))) setView(hash);
     }, 0);
     return () => window.clearTimeout(timer);
@@ -88,6 +93,7 @@ export function PrepHub() {
   useEffect(() => {
     window.localStorage.setItem("irap-meeting-notes", notes);
   }, [notes]);
+  useEffect(() => { window.localStorage.setItem("irap-estimates", JSON.stringify({ scenario, estimates })); }, [scenario, estimates]);
 
   function navigate(id: ViewId) {
     setView(id);
@@ -170,6 +176,8 @@ export function PrepHub() {
           {view === "architecture" && <Architecture />}
           {view === "research" && <Research />}
           {view === "funding" && <Funding />}
+          {view === "estimates" && <Estimates scenario={scenario} setScenario={setScenario} estimates={estimates} setEstimates={setEstimates} />}
+          {view === "guidance" && <Guidance />}
           {view === "documents" && <DocumentVault />}
           {view === "call" && <CallRoom notes={notes} setNotes={setNotes} startMeeting={() => setMeetingMode(true)} />}
           {view === "actions" && <ActionCentre statuses={statuses} cycleTask={cycleTask} notes={notes} setNotes={setNotes} />}
@@ -205,6 +213,77 @@ export function PrepHub() {
         </div>
       )}
     </div>
+  );
+}
+
+function Guidance() {
+  const assessment = [
+    ["Technical innovation", "Explain the advancement sought, the technical uncertainties, the alternatives tested, and why the outcome cannot be known in advance.", "Strong starting point", "Use the adaptive-engine baseline and WP1-WP4 evidence plan."],
+    ["Management capacity", "Show that the team has the experience, roles, decision authority, and time required to execute and commercialize the project.", "Needs completion", "Add management and technical profiles, organization chart, and committed project time."],
+    ["Financial capacity", "Demonstrate that the company can sustain operations and pay project costs while reimbursements are processed.", "Needs verified figures", "Complete statements, proof of funds, projections, budget, and cash-flow forecast."],
+    ["Likelihood of results", "Use realistic milestones, measurable acceptance criteria, risk controls, and evidence-based stage gates.", "Drafted", "Confirm dates, owners, baselines, thresholds, and data availability."],
+    ["Commercialization and market", "Establish a credible buyer, market need, competitive position, path to revenue, and evidence of customer interest.", "Needs primary evidence", "Complete buyer interviews, pricing tests, partner commitments, and cited market sizing."],
+    ["Benefits to Canada", "Quantify Canadian employment, innovation capacity, IP, revenue, exports, and wider economic benefits.", "Needs verified targets", "Add defensible three-year Canadian jobs, payroll, revenue, export, and IP figures."],
+  ];
+  return (
+    <>
+      <SectionHeader eyebrow="Official programme guidance" title="What NRC IRAP evaluates—and how Opyjo should respond." description="A working interpretation of current NRC guidance for technology-innovation financial support. Official programme language is separated from Opyjo preparation actions so the application remains accurate." />
+      <section className="guidance-source">
+        <div><span>Official source</span><h2>NRC IRAP financial support for technology innovation</h2><p>Current NRC guidance says minimum eligibility starts the relationship but does not guarantee support. Funding decisions are merit-based, consultative, and subject to available funds.</p></div>
+        <a href="https://nrc.canada.ca/en/support-technology-innovation/financial-support-technology-innovation" target="_blank" rel="noreferrer">Open NRC guidance ↗</a>
+      </section>
+
+      <div className="guidance-label"><span>01</span><div><h2>Minimum company eligibility</h2><p>All conditions should be supported by corporate source records.</p></div></div>
+      <section className="eligibility-grid">
+        {[
+          ["Incorporated", "A for-profit corporation operating in Canada."],
+          ["Company size", "Up to 500 full-time-equivalent employees."],
+          ["Technology mandate", "Developing and commercializing an innovative, technology-driven product or service."],
+          ["Canadian benefit", "Ready to create benefits such as Canadian jobs or increased innovation capacity."],
+        ].map(([title, body]) => <article key={title}><i>✓</i><h3>{title}</h3><p>{body}</p></article>)}
+      </section>
+      <div className="guidance-callout"><strong>Not eligible under this guidance:</strong> sole proprietorships, partnerships, cooperatives, unlimited liability corporations, and limited liability corporations. Confirm Opyjo’s exact legal status from incorporation records.</div>
+
+      <div className="guidance-label"><span>02</span><div><h2>Information NRC says you need to provide</h2><p>These are explicit items on the official programme page.</p></div></div>
+      <section className="required-info">
+        {[
+          ["CRA business number", "Business Number and relevant programme-account confirmations."],
+          ["Business plan", "Company, product, management, market, commercialization, finances, and Canadian growth case."],
+          ["Recent financial statements", "Current, internally consistent statements supported by company accounting records."],
+          ["Ownership structure", "Shareholders, percentages, control, and parent or subsidiary relationships."],
+          ["Management and technical profiles", "Relevant experience, achievements, responsibilities, location, and project commitment."],
+        ].map(([title, body], index) => <div key={title}><span>{String(index + 1).padStart(2, "0")}</span><p><strong>{title}</strong><small>{body}</small></p></div>)}
+      </section>
+
+      <div className="guidance-label"><span>03</span><div><h2>How a funding project is assessed</h2><p>The application should make each assessment area easy to verify.</p></div></div>
+      <section className="assessment-table">
+        <div className="assessment-head"><span>Assessment area</span><span>What the case must establish</span><span>Opyjo readiness</span><span>Next evidence</span></div>
+        {assessment.map(([area, meaning, status, action]) => <div key={area}><strong>{area}</strong><p>{meaning}</p><Badge tone={status.startsWith("Strong") || status === "Drafted" ? "green" : "gold"}>{status}</Badge><small>{action}</small></div>)}
+      </section>
+
+      <section className="content-grid equal guidance-split">
+        <article className="surface"><div className="surface-heading"><div><span>Potentially supportable focus</span><h3>R&D and innovation work</h3></div></div><ul className="detail-list"><li>Research and development of innovative technology</li><li>Technical activities that build innovation capacity</li><li>Work that accelerates a technology-driven product toward market</li><li>Canadian project resources and costs accepted in the contribution agreement</li><li>Activities with credible commercialization and Canadian benefit</li></ul><p className="guidance-caution">Exact eligible costs and contribution rates are project-specific. Use only the signed contribution agreement and written advisor guidance as authority.</p></article>
+        <article className="surface"><div className="surface-heading"><div><span>Official exclusions</span><h3>What NRC says it does not fund</h3></div></div><ul className="detail-list exclusion-list"><li>Day-to-day operating costs</li><li>Non-technical or purely commercial activities</li><li>Work performed outside Canada</li><li>Research with limited commercialization potential</li></ul><p className="guidance-caution danger">Keep routine hosting, ordinary maintenance, sales, marketing, corporate administration, and unrelated Brightwick work outside the R&D claim unless the agreement explicitly permits a specific cost.</p></article>
+      </section>
+
+      <div className="guidance-label"><span>04</span><div><h2>Relationship and funding process</h2><p>IRAP generally develops the project with the company rather than accepting a cold, fixed grant application.</p></div></div>
+      <section className="guidance-timeline">
+        {[
+          ["1", "Initial contact", "A senior executive contacts NRC IRAP. The contact centre gathers business information and assesses readiness for an advisory conversation."],
+          ["2", "Client engagement advisor", "The CEA learns about the business and goals, provides direction, and may refer the company to an industrial technology advisor."],
+          ["3", "Industrial technology advisor", "The ITA examines the company, technology, team, innovation potential, project need, and fit for advice, connections, or funding."],
+          ["4", "Project development", "If there is a fit, the company and advisor develop the scope, milestones, budget, eligible costs, risks, commercialization case, and proposal evidence."],
+          ["5", "Formal assessment", "A complete proposal and requested documentation are assessed. Invitation to propose does not guarantee approval."],
+          ["6", "Contribution agreement and claims", "Only approved work and cost treatment should be claimed. Retain payroll, time, invoice, payment, progress, and milestone evidence."],
+        ].map(([number, title, body]) => <article key={number}><i>{number}</i><div><h3>{title}</h3><p>{body}</p></div></article>)}
+      </section>
+
+      <section className="service-standard">
+        <div><span>Published service standards</span><h2>Plan liquidity conservatively.</h2><p>After NRC receives a complete proposal and requested documentation, its published funding-decision target varies by contribution size. For payments, NRC states a target of issuing payment within 35 business days after receiving all required documents and a correctly completed claim.</p></div>
+        <a href="https://nrc.canada.ca/en/support-technology-innovation/nrc-irap-service-standards" target="_blank" rel="noreferrer">Read service standards ↗</a>
+      </section>
+      <div className="guidance-disclaimer">This tab is a preparation aid based on public NRC information reviewed July 12, 2026. It is not legal advice, an eligibility decision, or a substitute for instructions from Opyjo’s CEA, ITA, Innovation Portal, or signed contribution agreement.</div>
+    </>
   );
 }
 
@@ -567,6 +646,33 @@ function Funding() {
       <div className="source-row">{officialSources.map((source) => <a key={source.href} href={source.href} target="_blank" rel="noreferrer">{source.label} ↗</a>)}</div>
     </>
   );
+}
+
+function Estimates({ scenario, setScenario, estimates, setEstimates }: { scenario: ScenarioId; setScenario: (value: ScenarioId) => void; estimates: Record<ScenarioId, EstimateInputs>; setEstimates: React.Dispatch<React.SetStateAction<Record<ScenarioId, EstimateInputs>>> }) {
+  const input = estimates[scenario]; const result = calculate(input);
+  const update = (key: keyof EstimateInputs, value: string) => setEstimates((all) => ({ ...all, [scenario]: normalize({ ...all[scenario], [key]: Number(value) }) }));
+  const fields: Array<[keyof EstimateInputs, string, string]> = [
+    ["leadHours", "Technical lead hours", "hours"], ["developerHours", "R&D developer hours", "hours"], ["specialistHours", "Data/learning specialist hours", "hours"], ["contractorHours", "Specialist contractor hours", "hours"],
+    ["contributionRate", "Illustrative contribution", "%"], ["claimDelayMonths", "Claim delay", "months"], ["monthlyBurn", "Non-project monthly burn", "CAD"], ["operatingReserve", "Operating reserve", "CAD"],
+    ["annualContract", "Annual contract value", "CAD"], ["year1Tenants", "Year 1 tenants", "tenants"], ["year2Tenants", "Year 2 tenants", "tenants"], ["year3Tenants", "Year 3 tenants", "tenants"], ["exportShare", "Export revenue share", "%"], ["hires", "Incremental Canadian jobs", "jobs"],
+  ];
+  async function exportPdf() {
+    await downloadDocument({ id: `estimate-${scenario}`, title: `${scenario[0]!.toUpperCase()+scenario.slice(1)} IRAP planning estimate`, category: "Financial", generated: true, description: "", sections: [
+      { heading: "Important status", body: "Planning estimates in Canadian dollars. Potential eligibility and the contribution percentage are illustrative only and require written NRC IRAP confirmation." },
+      { heading: "Project cost", body: `Total ${cad(result.total)}; Canadian wages ${cad(result.wages)}; employer cash-cost allowance ${cad(result.payroll)}; contractor ${cad(result.contractor)}; infrastructure and security ${cad(input.infrastructure+input.security)}.` },
+      { heading: "Contribution and liquidity", body: `Potentially eligible cost ${cad(result.potentiallyEligible)}; illustrative request at ${input.contributionRate}% ${cad(result.request)}; company share ${cad(result.companyShare)}; estimated minimum working capital ${cad(result.workingCapital)}.` },
+      { heading: "Commercial planning", body: `Year 1 ${cad(result.revenue[0]!)}; Year 2 ${cad(result.revenue[1]!)}; Year 3 ${cad(result.revenue[2]!)}; three-year revenue ${cad(result.threeYearRevenue)}; export revenue ${cad(result.exportRevenue)}; incremental Canadian jobs ${input.hires}.` },
+    ] });
+  }
+  return <>
+    <SectionHeader eyebrow="Integrated estimate model" title="Model the project, liquidity, and Canadian benefit." description="Editable planning estimates in CAD. Nothing in this model confirms cost eligibility or an NRC IRAP contribution rate." />
+    <div className="estimate-toolbar"><div>{(["lean","base","expanded"] as ScenarioId[]).map((id) => <button className={scenario===id?"active":""} key={id} onClick={()=>setScenario(id)}>{id}</button>)}</div><button className="secondary-button" onClick={()=>setEstimates(defaults)}>Reset to planning defaults</button><button className="primary-button" onClick={exportPdf}>Export estimate PDF</button></div>
+    <div className="estimate-warning"><strong>Advisor confirmation required.</strong> The model treats all entered project costs as potentially eligible for planning. Replace this treatment with the signed contribution agreement.</div>
+    <section className="estimate-metrics"><Metric value={cad(result.total)} label="Total project cost" tone="dark"/><Metric value={cad(result.request)} label={`Illustrative request · ${input.contributionRate}%`} tone="gold"/><Metric value={cad(result.companyShare)} label="Company contribution"/><Metric value={cad(result.workingCapital)} label="Minimum working capital"/></section>
+    <section className="estimate-layout"><article className="surface"><div className="surface-heading"><div><span>Editable assumptions</span><h3>{scenario[0]!.toUpperCase()+scenario.slice(1)} scenario</h3></div></div><div className="estimate-fields">{fields.map(([key,label,suffix])=><label key={key}><span>{label}<small>{suffix}</small></span><input type="number" min="0" value={input[key]} onChange={(e)=>update(key,e.target.value)}/></label>)}</div></article>
+    <article className="surface"><div className="surface-heading"><div><span>Calculated outputs</span><h3>Cost and cash requirement</h3></div></div><div className="estimate-breakdown">{[["Canadian R&D wages",result.wages],["Employer cash-cost allowance",result.payroll],["Specialist contractor",result.contractor],["Infrastructure and security",input.infrastructure+input.security],["Pre-reimbursement exposure",result.preReimbursement]].map(([label,value])=><div key={String(label)}><span>{label}</span><strong>{cad(Number(value))}</strong></div>)}</div><div className="estimate-chart"><h3>Three-year SaaS revenue</h3>{result.revenue.map((value,index)=><div key={index}><span>Year {index+1}</span><i style={{width:`${Math.max(4,value/Math.max(...result.revenue)*100)}%`}}/><strong>{cad(value)}</strong></div>)}<p>{cad(result.exportRevenue)} projected export revenue · {input.hires} incremental Canadian jobs</p></div></article></section>
+    <p className="estimate-source">Wage defaults are Toronto planning benchmarks from Government of Canada Job Bank references recorded in the model plan. Actual payroll, historical revenue, cash, ownership, and customer evidence remain source-record inputs.</p>
+  </>;
 }
 
 function CallRoom({ notes, setNotes, startMeeting }: { notes: string; setNotes: (value: string) => void; startMeeting: () => void }) {

@@ -5,6 +5,8 @@ export type ViewId =
   | "architecture"
   | "research"
   | "funding"
+  | "estimates"
+  | "guidance"
   | "documents"
   | "call"
   | "actions";
@@ -32,9 +34,11 @@ export const navGroups: Array<{
     label: "IRAP readiness",
     items: [
       { id: "funding", label: "Funding case", index: "05" },
-      { id: "documents", label: "Document vault", index: "06" },
-      { id: "call", label: "Meeting room", index: "07" },
-      { id: "actions", label: "Action centre", index: "08" },
+      { id: "estimates", label: "Estimates", index: "06" },
+      { id: "guidance", label: "NRC IRAP guidance", index: "07" },
+      { id: "documents", label: "Document vault", index: "08" },
+      { id: "call", label: "Meeting room", index: "09" },
+      { id: "actions", label: "Action centre", index: "10" },
     ],
   },
 ];
