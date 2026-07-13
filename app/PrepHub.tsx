@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   callQuestions,
   navGroups,
@@ -12,9 +12,13 @@ import {
 } from "./data";
 import { documentCategories, irapDocuments, type IrapDocument } from "./irapDocuments";
 import { cad, calculate, defaults, normalize, type EstimateInputs, type ScenarioId } from "./estimates";
+import { defaultAssumptions, type Assumption, type AssumptionStatus } from "./assumptions";
 
 const MEETING_AT = new Date("2026-07-16T12:00:00-04:00");
 const STATUS_ORDER: TaskStatus[] = ["todo", "progress", "done"];
+type Theme = "light" | "dark";
+type DocumentStage = "planning" | "review" | "verified" | "ready";
+type CustomAction = { id: string; title: string; detail: string; owner: string; due: string; status: TaskStatus };
 
 function cx(...names: Array<string | false | null | undefined>) {
   return names.filter(Boolean).join(" ");
@@ -60,6 +64,28 @@ function PageNav({ items }: { items: Array<[string, string]> }) {
   return <nav className="page-nav" aria-label="On this page">{items.map(([id, label]) => <a key={id} href={`#${id}`}>{label}</a>)}</nav>;
 }
 
+function DocumentBody({ body }: { body: string }) {
+  const lines = body.split("\n").filter((line) => line.trim());
+  const tableLines = lines.filter((line) => line.includes("|"));
+  if (tableLines.length >= 2) {
+    const firstTable = lines.findIndex((line) => line.includes("|"));
+    const lastTable = lines.reduce((last, line, index) => line.includes("|") ? index : last, firstTable);
+    const rows = lines.slice(firstTable, lastTable + 1).map((line) => line.split("|").map((cell) => cell.trim().replace(/\.$/, "")));
+    return <div className="document-content">{firstTable > 0 && <p>{lines.slice(0, firstTable).join(" ")}</p>}<div className="document-table-wrap"><table><caption>Structured planning schedule</caption><thead><tr>{rows[0]!.map((cell, index) => <th scope="col" key={index}>{cell}</th>)}</tr></thead><tbody>{rows.slice(1).map((row, rowIndex) => <tr key={rowIndex}>{row.map((cell, index) => <td key={index}>{cell}</td>)}</tr>)}</tbody></table></div>{lastTable < lines.length - 1 && <p>{lines.slice(lastTable + 1).join(" ")}</p>}</div>;
+  }
+  return <div className="document-content">{body.split(/\n\n+/).map((paragraph, index) => <p key={index}>{paragraph}</p>)}</div>;
+}
+
+function assumptionValue(assumptions: Assumption[], id: string) { return assumptions.find((item) => item.id === id)?.value ?? "0"; }
+function documentsWithAssumptions(assumptions: Assumption[]) {
+  const format = (id: string) => Number(assumptionValue(assumptions, id)).toLocaleString("en-CA");
+  const replacements: Array<[RegExp,string]> = [
+    [/158,000 planning estimate/g, `${format("project-cost")} planning estimate`], [/79,000 illustrative estimate/g, `${format("irap-request")} illustrative estimate`], [/79,000 planning estimate/g, `${format("company-share")} planning estimate`],
+    [/1,220,500 base-case estimate/g, `${format("revenue-3y")} base-case estimate`], [/427,175 base-case estimate/g, `${format("export-revenue")} base-case estimate`], [/2 planned/g, `${format("canadian-jobs")} planned`], [/5 planned/g, `${format("design-partners")} planned`], [/95 planning threshold/g, `${format("coverage")} planning threshold`], [/250/g, format("latency")], [/30 planning threshold/g, `${format("conversion")} planning threshold`],
+  ];
+  return irapDocuments.map((document) => ({ ...document, sections: document.sections?.map((section) => ({ ...section, body: replacements.reduce((body,[pattern,value]) => body.replace(pattern,value), section.body) })) }));
+}
+
 export function PrepHub() {
   const [view, setView] = useState<ViewId>("overview");
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -72,6 +98,11 @@ export function PrepHub() {
   const [notes, setNotes] = useState("");
   const [scenario, setScenario] = useState<ScenarioId>("base");
   const [estimates, setEstimates] = useState<Record<ScenarioId, EstimateInputs>>(defaults);
+  const [theme, setTheme] = useState<Theme>("light");
+  const [commandOpen, setCommandOpen] = useState(false);
+  const [assumptions, setAssumptions] = useState<Assumption[]>(defaultAssumptions);
+  const [documentStages, setDocumentStages] = useState<Record<string, DocumentStage>>({});
+  const [customActions, setCustomActions] = useState<CustomAction[]>([]);
   const countdown = useCountdown();
 
   useEffect(() => {
@@ -80,11 +111,13 @@ export function PrepHub() {
       const storedNotes = window.localStorage.getItem("irap-meeting-notes");
       const hash = window.location.hash.replace("#", "") as ViewId;
       const storedEstimates = window.localStorage.getItem("irap-estimates");
+      const storedWorkspace = window.localStorage.getItem("irap-workspace-v2");
       if (storedStatuses) {
         try { setStatuses((current) => ({ ...current, ...JSON.parse(storedStatuses) })); } catch { /* ignore invalid local data */ }
       }
       if (storedNotes) setNotes(storedNotes);
       if (storedEstimates) { try { const saved = JSON.parse(storedEstimates); setScenario(saved.scenario ?? "base"); setEstimates({ ...defaults, ...saved.estimates }); } catch { /* ignore */ } }
+      if (storedWorkspace) { try { const saved = JSON.parse(storedWorkspace); setTheme(saved.theme ?? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")); setAssumptions(saved.assumptions ?? defaultAssumptions); setDocumentStages(saved.documentStages ?? {}); setCustomActions(saved.customActions ?? []); } catch { /* ignore */ } } else setTheme(window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
       if (navGroups.some((group) => group.items.some((item) => item.id === hash))) setView(hash);
     }, 0);
     return () => window.clearTimeout(timer);
@@ -98,6 +131,8 @@ export function PrepHub() {
     window.localStorage.setItem("irap-meeting-notes", notes);
   }, [notes]);
   useEffect(() => { window.localStorage.setItem("irap-estimates", JSON.stringify({ scenario, estimates })); }, [scenario, estimates]);
+  useEffect(() => { document.documentElement.dataset.theme = theme; window.localStorage.setItem("irap-workspace-v2", JSON.stringify({ theme, assumptions, documentStages, customActions })); }, [theme, assumptions, documentStages, customActions]);
+  useEffect(() => { const onKey = (event: KeyboardEvent) => { if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") { event.preventDefault(); setCommandOpen((open) => !open); } if (event.key === "Escape") setCommandOpen(false); }; window.addEventListener("keydown", onKey); return () => window.removeEventListener("keydown", onKey); }, []);
 
   function navigate(id: ViewId) {
     setView(id);
@@ -121,12 +156,15 @@ export function PrepHub() {
   const searchResults = useMemo(() => {
     const query = search.trim().toLowerCase();
     if (!query) return [];
-    return navGroups.flatMap((group) => group.items)
-      .filter((item) => `${item.label} ${item.id}`.toLowerCase().includes(query));
-  }, [search]);
+    const sections = navGroups.flatMap((group) => group.items).filter((item) => `${item.label} ${item.id}`.toLowerCase().includes(query)).map((item) => ({ id: item.id, label: item.label, kind: "Workspace" }));
+    const documents = irapDocuments.filter((document) => `${document.title} ${document.description} ${document.sections?.map((section) => `${section.heading} ${section.body}`).join(" ")}`.toLowerCase().includes(query)).slice(0,5).map((document) => ({ id: "documents" as ViewId, label: document.title, kind: "Document" }));
+    const tasks = [...prepTasks, ...customActions].filter((task) => `${task.title} ${task.detail}`.toLowerCase().includes(query)).slice(0,4).map((task) => ({ id: "actions" as ViewId, label: task.title, kind: "Action" }));
+    return [...sections, ...documents, ...tasks].slice(0,10);
+  }, [search, customActions]);
 
   return (
     <div className="app-shell">
+      <a className="skip-link" href="#main-workspace">Skip to main content</a>
       <button className={cx("nav-scrim", mobileOpen && "visible")} onClick={() => setMobileOpen(false)} aria-label="Close menu" />
       <aside className={cx("sidebar", mobileOpen && "open")}>
         <div className="brand-block">
@@ -164,16 +202,18 @@ export function PrepHub() {
               </label>
               {searchResults.length > 0 && (
                 <div className="search-results">
-                  {searchResults.map((result) => <button key={result.id} onClick={() => navigate(result.id)}>{result.label}<span>↗</span></button>)}
+                  {searchResults.map((result, index) => <button key={`${result.id}-${index}`} onClick={() => navigate(result.id)}><span><small>{result.kind}</small>{result.label}</span><b>↗</b></button>)}
                 </div>
               )}
             </div>
+            <button className="icon-button" onClick={() => setCommandOpen(true)} aria-label="Open command palette">⌘K</button>
+            <button className="icon-button" onClick={() => setTheme((current) => current === "light" ? "dark" : "light")} aria-label={`Use ${theme === "light" ? "dark" : "light"} theme`}>{theme === "light" ? "◐" : "☀"}</button>
             <button className="secondary-button" onClick={() => window.print()}>Print brief</button>
             <button className="primary-button" onClick={() => { setMeetingSlide(0); setMeetingMode(true); }}>Start meeting mode</button>
           </div>
         </header>
 
-        <div className="workspace">
+        <div className="workspace" id="main-workspace" data-view={view} key={view} tabIndex={-1}>
           {view === "overview" && <Overview readiness={readiness} completed={completed} navigate={navigate} countdown={countdown} statuses={statuses} cycleTask={cycleTask} />}
           {view === "business" && <BusinessCase />}
           {view === "engine" && <Engine />}
@@ -181,10 +221,11 @@ export function PrepHub() {
           {view === "research" && <Research />}
           {view === "funding" && <Funding />}
           {view === "estimates" && <Estimates scenario={scenario} setScenario={setScenario} estimates={estimates} setEstimates={setEstimates} />}
+          {view === "assumptions" && <AssumptionsRegister assumptions={assumptions} setAssumptions={setAssumptions} />}
           {view === "guidance" && <Guidance />}
-          {view === "documents" && <DocumentVault />}
-          {view === "call" && <CallRoom notes={notes} setNotes={setNotes} startMeeting={() => setMeetingMode(true)} />}
-          {view === "actions" && <ActionCentre statuses={statuses} cycleTask={cycleTask} notes={notes} setNotes={setNotes} />}
+          {view === "documents" && <DocumentVault assumptions={assumptions} setAssumptions={setAssumptions} stages={documentStages} setStages={setDocumentStages} />}
+          {view === "call" && <CallRoom notes={notes} setNotes={setNotes} startMeeting={() => setMeetingMode(true)} addAction={(action) => setCustomActions((current) => [...current, { ...action, id: crypto.randomUUID(), status: "todo" }])} />}
+          {view === "actions" && <ActionCentre statuses={statuses} cycleTask={cycleTask} notes={notes} setNotes={setNotes} customActions={customActions} setCustomActions={setCustomActions} />}
         </div>
       </main>
 
@@ -216,8 +257,28 @@ export function PrepHub() {
           </div>
         </div>
       )}
+      {commandOpen && <CommandPalette search={search} setSearch={setSearch} results={searchResults} navigate={(id) => { navigate(id); setCommandOpen(false); }} close={() => setCommandOpen(false)} theme={theme} setTheme={setTheme} assumptions={assumptions} setAssumptions={setAssumptions} estimates={estimates} setEstimates={setEstimates} scenario={scenario} setScenario={setScenario} statuses={statuses} setStatuses={setStatuses} notes={notes} setNotes={setNotes} documentStages={documentStages} setDocumentStages={setDocumentStages} customActions={customActions} setCustomActions={setCustomActions} />}
     </div>
   );
+}
+
+function CommandPalette(props: { search: string; setSearch: (value:string)=>void; results: Array<{id:ViewId;label:string;kind:string}>; navigate:(id:ViewId)=>void; close:()=>void; theme:Theme; setTheme:(theme:Theme)=>void; assumptions:Assumption[]; setAssumptions:React.Dispatch<React.SetStateAction<Assumption[]>>; estimates:Record<ScenarioId,EstimateInputs>; setEstimates:React.Dispatch<React.SetStateAction<Record<ScenarioId,EstimateInputs>>>; scenario:ScenarioId; setScenario:(value:ScenarioId)=>void; statuses:Record<string,TaskStatus>; setStatuses:React.Dispatch<React.SetStateAction<Record<string,TaskStatus>>>; notes:string; setNotes:(value:string)=>void; documentStages:Record<string,DocumentStage>; setDocumentStages:React.Dispatch<React.SetStateAction<Record<string,DocumentStage>>>; customActions:CustomAction[]; setCustomActions:React.Dispatch<React.SetStateAction<CustomAction[]>> }) {
+  const paletteRef=useRef<HTMLDivElement>(null);
+  useEffect(()=>{ const onKey=(event:KeyboardEvent)=>{ if(event.key!=="Tab"||!paletteRef.current)return; const focusable=Array.from(paletteRef.current.querySelectorAll<HTMLElement>('button,input,[tabindex]:not([tabindex="-1"])')).filter((item)=>!item.hasAttribute("disabled")); if(!focusable.length)return; const first=focusable[0]!,last=focusable[focusable.length-1]!; if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();} }; window.addEventListener("keydown",onKey); return()=>window.removeEventListener("keydown",onKey); },[]);
+  const downloadText=(name:string,text:string,type="text/csv")=>{const blob=new Blob([text],{type});const url=URL.createObjectURL(blob);const anchor=document.createElement("a");anchor.href=url;anchor.download=name;anchor.click();URL.revokeObjectURL(url);};
+  const exportData = () => { const blob = new Blob([JSON.stringify({version:2,exportedAt:new Date().toISOString(),theme:props.theme,assumptions:props.assumptions,estimates:props.estimates,scenario:props.scenario,statuses:props.statuses,notes:props.notes,documentStages:props.documentStages,customActions:props.customActions},null,2)],{type:"application/json"}); const url=URL.createObjectURL(blob); const anchor=document.createElement("a"); anchor.href=url; anchor.download="opyjo-irap-workspace.json"; anchor.click(); URL.revokeObjectURL(url); };
+  const importData = (file:File) => { const reader=new FileReader(); reader.onload=()=>{ try { const data=JSON.parse(String(reader.result)); if(data.assumptions) props.setAssumptions(data.assumptions); if(data.estimates) props.setEstimates(data.estimates); if(data.scenario) props.setScenario(data.scenario); if(data.statuses) props.setStatuses(data.statuses); if(typeof data.notes==="string") props.setNotes(data.notes); if(data.documentStages) props.setDocumentStages(data.documentStages); if(data.customActions) props.setCustomActions(data.customActions); if(data.theme) props.setTheme(data.theme); props.close(); } catch { window.alert("This backup file could not be read."); } }; reader.readAsText(file); };
+  const clearData=()=>{if(!window.confirm("Clear all locally saved IRAP workspace data? Export a backup first if you may need it."))return; props.setAssumptions(defaultAssumptions);props.setEstimates(defaults);props.setScenario("base");props.setStatuses(Object.fromEntries(prepTasks.map((task)=>[task.id,task.initialStatus])));props.setNotes("");props.setDocumentStages({});props.setCustomActions([]);props.close();};
+  const assumptionsCsv=["Label,Category,Value,Unit,Status,Source,Source date,Owner,Notes",...props.assumptions.map((item)=>[item.label,item.category,item.value,item.unit,item.status,item.source,item.sourceDate,item.owner,item.notes].map((value)=>`"${String(value).replaceAll('"','""')}"`).join(","))].join("\n");
+  const actionsCsv=[["Title","Detail","Owner","Due","Status"],...prepTasks.map((item)=>[item.title,item.detail,item.owner,item.due,props.statuses[item.id]??item.initialStatus]),...props.customActions.map((item)=>[item.title,item.detail,item.owner,item.due,item.status])].map((row)=>row.map((value)=>`"${String(value).replaceAll('"','""')}"`).join(",")).join("\n");
+  return <div className="command-overlay" role="dialog" aria-modal="true" aria-label="Command palette" onMouseDown={(event)=>{if(event.target===event.currentTarget)props.close();}}><div className="command-palette" ref={paletteRef}><header><span>⌕</span><input autoFocus value={props.search} onChange={(event)=>props.setSearch(event.target.value)} placeholder="Search workspaces, documents, actions…"/><kbd>esc</kbd></header><main>{props.search ? props.results.map((result,index)=><button key={`${result.id}-${index}`} onClick={()=>props.navigate(result.id)}><span><small>{result.kind}</small><strong>{result.label}</strong></span><b>↗</b></button>) : <><p>Quick actions</p><button onClick={()=>props.navigate("assumptions")}><span><small>Workspace</small><strong>Open assumptions register</strong></span><b>→</b></button><button onClick={()=>props.setTheme(props.theme==="light"?"dark":"light")}><span><small>Appearance</small><strong>Switch to {props.theme==="light"?"dark":"light"} mode</strong></span><b>◐</b></button><button onClick={exportData}><span><small>Data portability</small><strong>Export workspace backup</strong></span><b>↓</b></button><button onClick={()=>downloadText("opyjo-assumptions.csv",assumptionsCsv)}><span><small>Spreadsheet export</small><strong>Export assumptions CSV</strong></span><b>↓</b></button><button onClick={()=>downloadText("opyjo-actions.csv",actionsCsv)}><span><small>Spreadsheet export</small><strong>Export action list CSV</strong></span><b>↓</b></button><label className="command-import"><span><small>Data portability</small><strong>Import workspace backup</strong></span><b>↑</b><input type="file" accept="application/json" onChange={(event)=>event.target.files?.[0]&&importData(event.target.files[0])}/></label><button className="danger-command" onClick={clearData}><span><small>Local data</small><strong>Clear saved workspace data</strong></span><b>×</b></button></>}</main><footer><span>Navigate</span><span>⌘K open</span><span>Esc close</span></footer></div></div>;
+}
+
+function AssumptionsRegister({ assumptions, setAssumptions }: { assumptions:Assumption[]; setAssumptions:React.Dispatch<React.SetStateAction<Assumption[]>> }) {
+  const [category,setCategory]=useState("All"); const [query,setQuery]=useState("");
+  const categories=["All",...Array.from(new Set(assumptions.map((item)=>item.category)))]; const shown=assumptions.filter((item)=>(category==="All"||item.category===category)&&`${item.label} ${item.source} ${item.notes}`.toLowerCase().includes(query.toLowerCase()));
+  const update=(id:string,key:keyof Assumption,value:string)=>setAssumptions((current)=>current.map((item)=>item.id===id?{...item,[key]:value}:item));
+  return <><SectionHeader eyebrow="Single source of truth" title="Turn assumptions into verified evidence." description="Every planning figure has an owner, source, confidence state, and downstream impact. Update a value here and related working documents use the same figure."/><section className="assumption-summary">{(["planning","review","verified"] as AssumptionStatus[]).map((status)=><article key={status}><strong>{assumptions.filter((item)=>item.status===status).length}</strong><span>{status}</span></article>)}</section><section className="register-controls"><label>⌕<input value={query} onChange={(event)=>setQuery(event.target.value)} placeholder="Search assumptions…"/></label><div>{categories.map((item)=><button className={category===item?"active":""} key={item} onClick={()=>setCategory(item)}>{item}</button>)}</div></section><section className="assumption-list">{shown.map((item)=><article key={item.id}><header><div><span>{item.category}</span><h3>{item.label}</h3></div><select value={item.status} onChange={(event)=>update(item.id,"status",event.target.value)} aria-label={`Status for ${item.label}`}><option value="planning">Planning</option><option value="review">Needs review</option><option value="verified">Source verified</option></select></header><div className="assumption-value"><input value={item.value} onChange={(event)=>update(item.id,"value",event.target.value)} aria-label={`Value for ${item.label}`}/><span>{item.unit}</span></div><div className="assumption-meta"><label>Source<input value={item.source} onChange={(event)=>update(item.id,"source",event.target.value)}/></label><label>Source date<input type="date" value={item.sourceDate} onChange={(event)=>update(item.id,"sourceDate",event.target.value)}/></label><label>Owner<input value={item.owner} onChange={(event)=>update(item.id,"owner",event.target.value)}/></label></div><label className="assumption-notes">Notes<textarea value={item.notes} onChange={(event)=>update(item.id,"notes",event.target.value)}/></label></article>)}</section></>;
 }
 
 function Guidance() {
@@ -327,11 +388,13 @@ async function downloadDocument(document: IrapDocument) {
   pdf.save(`Opyjo-${document.id}.pdf`);
 }
 
-function DocumentVault() {
+function DocumentVault({ assumptions, setAssumptions, stages, setStages }: { assumptions: Assumption[]; setAssumptions:React.Dispatch<React.SetStateAction<Assumption[]>>; stages: Record<string, DocumentStage>; setStages: React.Dispatch<React.SetStateAction<Record<string, DocumentStage>>> }) {
   const [busy, setBusy] = useState<string | null>(null);
   const [preview, setPreview] = useState<IrapDocument | null>(null);
-  const generated = irapDocuments.filter((document) => document.generated);
-  const sourceDocuments = irapDocuments.filter((document) => !document.generated);
+  const [query, setQuery] = useState(""); const [stageFilter, setStageFilter] = useState<DocumentStage | "all">("all");
+  const currentDocuments = useMemo(() => documentsWithAssumptions(assumptions), [assumptions]);
+  const generated = currentDocuments.filter((document) => document.generated).filter((document) => stageFilter === "all" || (stages[document.id] ?? "planning") === stageFilter).filter((document) => !query || `${document.title} ${document.description} ${document.sections?.map((section)=>`${section.heading} ${section.body}`).join(" ")}`.toLowerCase().includes(query.toLowerCase()));
+  const sourceDocuments = currentDocuments.filter((document) => !document.generated);
   async function download(document: IrapDocument) {
     setBusy(document.id);
     try { await downloadDocument(document); } finally { setBusy(null); }
@@ -347,13 +410,16 @@ function DocumentVault() {
         <div><span className="document-count">{generated.length}</span><div><h2>Prepared working documents</h2><p>Financial, R&D, and business-context drafts based on the current Opyjo project case.</p></div></div>
         <button className="primary-button" disabled={busy !== null} onClick={downloadAll}>{busy === "all" ? "Preparing PDFs…" : "Download document pack"}</button>
       </section>
+      <section className="vault-controls"><label><span>⌕</span><input value={query} onChange={(event)=>setQuery(event.target.value)} placeholder="Search titles, sections, and document content…" aria-label="Search document vault"/></label><div>{(["all","planning","review","verified","ready"] as const).map((stage)=><button className={stageFilter===stage?"active":""} key={stage} onClick={()=>setStageFilter(stage)}>{stage}</button>)}</div></section>
+      <details className="vault-assumption-editor"><summary><span><strong>Edit document assumptions</strong><small>Changes propagate into related working documents</small></span><b>{assumptions.filter((item)=>item.status!=="verified").length} unverified</b></summary><div>{assumptions.map((item)=><label key={item.id}><span>{item.label}<small>{item.status}</small></span><input value={item.value} onChange={(event)=>setAssumptions((current)=>current.map((entry)=>entry.id===item.id?{...entry,value:event.target.value}:entry))}/><i>{item.unit}</i></label>)}</div></details>
       <div className="vault-note"><strong>Before submission:</strong> replace planning language with verified figures, dates, names, source attachments, and advisor-confirmed eligibility. These are working drafts, not official NRC forms.</div>
       <div className="vault-section-title"><div><span>Prepared documents</span><h2>Read and download</h2></div><p>{generated.length} documents</p></div>
       <section className="prepared-grid">
-        {generated.map((document) => { const inputs = document.sections?.reduce((total, section) => total + (section.body.match(/\[INPUT\]/g)?.length ?? 0), 0) ?? 0; return <article className="document-card" key={document.id}>
+        {generated.map((document) => { const estimates = document.sections?.reduce((total, section) => total + (section.body.match(/planning estimate|planning assumption|planning amount|planning threshold/gi)?.length ?? 0), 0) ?? 0; const stage = stages[document.id] ?? "planning"; return <article className="document-card" key={document.id}>
           <div className="document-card-top"><span>{document.category}</span><i>DOC</i></div>
           <h3>{document.title}</h3><p>{document.description}</p>
-          <div className="document-status"><span><i className={inputs ? "draft" : "ready"}/>{inputs ? "Needs input" : "Ready to review"}</span><small>{inputs ? `${inputs} fields remaining` : "Draft complete"}</small></div>
+          <div className="document-status"><span><i className={estimates ? "draft" : "ready"}/>{estimates ? "Planning draft" : "Ready to review"}</span><small>{estimates ? `${estimates} estimates to verify` : "Draft complete"}</small></div>
+          <label className="document-stage"><span>Workflow</span><select value={stage} onChange={(event)=>setStages((current)=>({...current,[document.id]:event.target.value as DocumentStage}))}><option value="planning">Planning draft</option><option value="review">Internal review</option><option value="verified">Source verified</option><option value="ready">Advisor ready</option></select></label>
           <div className="document-card-actions"><button className="read-button" onClick={() => setPreview(document)}>Read document</button><button className="download-button" disabled={busy !== null} onClick={() => download(document)} aria-label={`Download ${document.title}`}>↓</button></div>
         </article>})}
       </section>
@@ -372,7 +438,7 @@ function DocumentVault() {
       {preview && <div className="reader-overlay" role="dialog" aria-modal="true" aria-label={preview.title} onMouseDown={(event) => { if (event.target === event.currentTarget) setPreview(null); }}>
         <article className="document-reader">
           <header><div><span>{preview.category}</span><h2>{preview.title}</h2><p>Opyjo Inc. · IRAP working document</p></div><button onClick={() => setPreview(null)} aria-label="Close document">×</button></header>
-          <main>{preview.sections?.map((section) => <section key={section.heading}><h3>{section.heading}</h3><p>{section.body}</p></section>)}</main>
+          <main>{preview.sections?.map((section) => <section key={section.heading}><h3>{section.heading}</h3><DocumentBody body={section.body} /></section>)}</main>
           <footer><span>Review the content before using it externally.</span><button disabled={busy !== null} onClick={() => download(preview)}>{busy === preview.id ? "Preparing…" : "Download PDF"}</button></footer>
         </article>
       </div>}
@@ -546,6 +612,46 @@ function Engine() {
         ].map(([number, title, body], index) => <div className="loop-step" key={number}><i>{number}</i><strong>{title}</strong><p>{body}</p>{index < 3 && <b>→</b>}</div>)}
       </section>
 
+      <section className="engine-flow surface" aria-labelledby="engine-flow-title">
+        <div className="surface-heading"><div><span>Detailed system flow</span><h3 id="engine-flow-title">From learner answer to the next auditable decision</h3></div><Badge tone="blue">Closed feedback loop</Badge></div>
+        <div className="flow-legend"><span><i className="flow-tenant"/>Customer system</span><span><i className="flow-api"/>Secure API boundary</span><span><i className="flow-core"/>Adaptive decision core</span><span><i className="flow-data"/>Tenant-scoped evidence</span></div>
+        <div className="flow-canvas">
+          <div className="flow-lane flow-lane-customer"><header><span>01</span><div><strong>Customer learning experience</strong><small>Content, learner identity, rendering, and grading remain here</small></div></header><div className="flow-row">
+            <article><i>LEARN</i><strong>Learner answers an item</strong><p>The application displays its own question and records the selected response.</p></article><b className="flow-arrow">→</b>
+            <article><i>GRADE</i><strong>Tenant grades locally</strong><p>The backend converts the result to correct/incorrect. No answer key leaves the customer.</p></article><b className="flow-arrow">→</b>
+            <article><i>EVENT</i><strong>Create minimal outcome</strong><p>Opaque learner ID, item ID, outcome, timestamp, and an idempotency key.</p></article>
+          </div></div>
+          <div className="flow-down"><span>HTTPS · server-side bearer key · scoped permission</span><b>↓</b></div>
+          <div className="flow-lane flow-lane-api"><header><span>02</span><div><strong>Trust and validation boundary</strong><small>Every request is authenticated, constrained, and safe to retry</small></div></header><div className="flow-row">
+            <article><i>AUTH</i><strong>Authenticate tenant</strong><p>Resolve key prefix, compare its hash, confirm status, expiry, scope, and rate limit.</p></article><b className="flow-arrow">→</b>
+            <article><i>CHECK</i><strong>Validate contract</strong><p>Reject unknown fields or invalid IDs and enforce the metadata-only boundary.</p></article><b className="flow-arrow">→</b>
+            <article className="flow-decision"><i>RETRY?</i><strong>Idempotency gate</strong><p>Existing identical event returns its original result. A conflicting replay is rejected.</p><small>Conflict → shaped 409 response</small></article>
+          </div></div>
+          <div className="flow-down"><span>Valid, new outcome event</span><b>↓</b></div>
+          <div className="flow-lane flow-lane-core"><header><span>03</span><div><strong>Adaptive learner model</strong><small>Update evidence first, then use the new state for the next choice</small></div></header><div className="flow-row">
+            <article><i>LOAD</i><strong>Load learner-skill state</strong><p>Retrieve current mastery, attempts, recent history, and consecutive errors for this tenant.</p></article><b className="flow-arrow">→</b>
+            <article><i>UPDATE</i><strong>Update mastery</strong><p>Apply difficulty-weighted EWMA, clamp to 0–1, and update attempt and error counters.</p></article><b className="flow-arrow">→</b>
+            <article><i>AUDIT</i><strong>Append answer event</strong><p>Record before/after mastery, model version, timestamps, outcome, and idempotency key.</p></article>
+          </div></div>
+          <div className="flow-down"><span>Tenant asks for the next item within an eligible scope</span><b>↓</b></div>
+          <div className="flow-lane flow-lane-policy"><header><span>04</span><div><strong>Next-item selection policy</strong><small>A deterministic hierarchy chooses the most useful eligible item</small></div></header><div className="flow-policy-grid">
+            <article><span>1</span><strong>Build candidate bank</strong><p>Active tenant items filtered by grade, caller skill scope, and available metadata.</p></article>
+            <article className="priority"><span>2A</span><strong>Repeated errors?</strong><p>After two misses, stay on the skill and prefer an easier scaffold item.</p></article>
+            <article><span>2B</span><strong>Weak skill?</strong><p>Otherwise target the lowest mastery below the 0.80 working threshold.</p></article>
+            <article><span>2C</span><strong>Skills strong?</strong><p>Spiral the least recently practised skill to maintain retention.</p></article>
+            <article><span>3</span><strong>Match difficulty</strong><p>Translate mastery into a target difficulty band and rank suitable items.</p></article>
+            <article><span>4</span><strong>Apply recency controls</strong><p>Avoid the last 30 items or 14 days, then relax constraints in a recorded order.</p></article>
+          </div></div>
+          <div className="flow-down"><span>Selected item ID + reason + model version</span><b>↓</b></div>
+          <div className="flow-lane flow-lane-data"><header><span>05</span><div><strong>Audit, response, and continuous evidence</strong><small>Every choice is explainable and becomes research evidence</small></div></header><div className="flow-row">
+            <article><i>LOG</i><strong>Write selection event</strong><p>Decision ID, item, skill, reason, candidate count, request filters, and algorithm version.</p></article><b className="flow-arrow">→</b>
+            <article><i>RETURN</i><strong>Return safe fields</strong><p>The API sends an item ID and rationale. The customer retrieves and renders its content.</p></article><b className="flow-arrow">→</b>
+            <article><i>MEASURE</i><strong>Evaluate outcomes</strong><p>Pseudonymous events support calibration, experiments, drift checks, and model decisions.</p></article>
+          </div></div>
+          <div className="flow-feedback"><b>↺</b><div><strong>The loop repeats with stronger evidence</strong><p>The next graded answer updates the learner again. Versioned models and audit events make every change reproducible and reversible.</p></div><span>Timeout / 5xx → customer uses its local fallback<br/>429 → back off and retry safely</span></div>
+        </div>
+      </section>
+
       <section className="content-grid equal">
         <article className="surface formula-card">
           <div className="surface-heading"><div><span>Learner model · adaptive-v1</span><h3>Difficulty-weighted EWMA</h3></div><Badge tone="blue">Baseline model</Badge></div>
@@ -682,6 +788,9 @@ function Estimates({ scenario, setScenario, estimates, setEstimates }: { scenari
     ["Labour plan", fields.slice(0,4)], ["Funding and liquidity", fields.slice(4,8)], ["Revenue and benefits", fields.slice(8)],
   ] as const;
   const comparison = (["lean","base","expanded"] as ScenarioId[]).map((id) => ({ id, result: calculate(estimates[id]) }));
+  const sensitivities = [-10,0,10].map((change)=>({change,project:result.total*(1+change/100),revenue:result.threeYearRevenue*(1+change/100),capital:result.workingCapital*(1+change/100)}));
+  const cashMonths = Array.from({length:10},(_,index)=>{ const spend=result.monthlyProject+input.monthlyBurn; const reimbursement=index>=input.claimDelayMonths?result.monthlyProject*input.contributionRate/100:0; return {month:index+1,spend,reimbursement,net:reimbursement-spend}; });
+  let running=input.operatingReserve+result.preReimbursement; const cashSeries=cashMonths.map((month)=>({...month,closing:(running+=month.net)})); const maxCash=Math.max(...cashSeries.map((month)=>Math.abs(month.closing)),input.operatingReserve,1);
   async function exportPdf() {
     await downloadDocument({ id: `estimate-${scenario}`, title: `${scenario[0]!.toUpperCase()+scenario.slice(1)} IRAP planning estimate`, category: "Financial", generated: true, description: "", sections: [
       { heading: "Important status", body: "Planning estimates in Canadian dollars. Potential eligibility and the contribution percentage are illustrative only and require written NRC IRAP confirmation." },
@@ -699,11 +808,13 @@ function Estimates({ scenario, setScenario, estimates, setEstimates }: { scenari
     <section className="estimate-layout" id="estimate-assumptions"><article className="surface"><div className="surface-heading"><div><span>Editable assumptions</span><h3>{scenario[0]!.toUpperCase()+scenario.slice(1)} scenario</h3></div></div><div className="estimate-groups">{groups.map(([title,group], index)=><details key={title} open={index===0}><summary>{title}<span>{group.length} inputs</span></summary><div className="estimate-fields">{group.map(([key,label,suffix])=><label key={key}><span>{label}<small>{suffix}</small></span><input aria-label={label} type="number" min="0" value={input[key]} onChange={(e)=>update(key,e.target.value)}/></label>)}</div></details>)}</div></article>
     <article className="surface sticky-results"><div className="surface-heading"><div><span>Calculated outputs</span><h3>Cost and cash requirement</h3></div></div><div className="estimate-breakdown">{[["Canadian R&D wages",result.wages],["Employer cash-cost allowance",result.payroll],["Specialist contractor",result.contractor],["Infrastructure and security",input.infrastructure+input.security],["Pre-reimbursement exposure",result.preReimbursement]].map(([label,value])=><div key={String(label)}><span>{label}</span><strong>{cad(Number(value))}</strong></div>)}</div><div className="estimate-chart" id="estimate-revenue"><h3>Three-year SaaS revenue</h3>{result.revenue.map((value,index)=><div key={index}><span>Year {index+1}</span><i style={{width:`${Math.max(4,value/Math.max(...result.revenue)*100)}%`}}/><strong>{cad(value)}</strong></div>)}<p>{cad(result.exportRevenue)} projected export revenue · {input.hires} incremental Canadian jobs</p></div></article></section>
     <section className="scenario-comparison surface" id="estimate-comparison"><div className="surface-heading"><div><span>Scenario comparison</span><h3>Understand the trade-offs before choosing.</h3></div></div><div className="comparison-table"><div><span>Metric</span>{comparison.map(({id})=><strong key={id}>{id}</strong>)}</div>{[["Project cost","total"],["Illustrative request","request"],["Working capital","workingCapital"],["Three-year revenue","threeYearRevenue"]].map(([label,key])=><div key={label}><span>{label}</span>{comparison.map(({id,result:row})=><button className={scenario===id?"selected":""} key={id} onClick={()=>setScenario(id)}>{cad(row[key as keyof typeof row] as number)}</button>)}</div>)}</div></section>
+    <section className="estimate-insights"><article className="surface"><div className="surface-heading"><div><span>Sensitivity analysis</span><h3>How a 10% change affects the plan</h3></div></div><div className="sensitivity-table"><div><span>Change</span><span>Project cost</span><span>Working capital</span><span>3-year revenue</span></div>{sensitivities.map((row)=><div className={row.change===0?"base":""} key={row.change}><strong>{row.change>0?"+":""}{row.change}%</strong><span>{cad(row.project)}</span><span>{cad(row.capital)}</span><span>{cad(row.revenue)}</span></div>)}</div></article><article className="surface cash-chart"><div className="surface-heading"><div><span>10-month cash-flow</span><h3>Spend, reimbursement, and reserve</h3></div></div><div className="cash-legend"><span><i/>Closing cash</span><span><i/>Minimum reserve</span></div><div className="cash-bars">{cashSeries.map((month)=><div key={month.month}><span>M{month.month}</span><div><i className={month.closing<input.operatingReserve?"risk":""} style={{height:`${Math.max(3,Math.abs(month.closing)/maxCash*100)}%`}}/><b style={{bottom:`${Math.min(96,input.operatingReserve/maxCash*100)}%`}}/></div><small>{cad(month.closing)}</small></div>)}</div><p>Assumes equal monthly project spending and reimbursement after a {input.claimDelayMonths}-month planning delay. Red bars fall below the operating reserve.</p></article></section>
     <p className="estimate-source">Wage defaults are Toronto planning benchmarks from Government of Canada Job Bank references recorded in the model plan. Actual payroll, historical revenue, cash, ownership, and customer evidence remain source-record inputs.</p>
   </>;
 }
 
-function CallRoom({ notes, setNotes, startMeeting }: { notes: string; setNotes: (value: string) => void; startMeeting: () => void }) {
+function CallRoom({ notes, setNotes, startMeeting, addAction }: { notes: string; setNotes: (value: string) => void; startMeeting: () => void; addAction:(action:Omit<CustomAction,"id"|"status">)=>void }) {
+  const [followup,setFollowup]=useState({title:"",detail:"",owner:"Johnson",due:"Next follow-up"}); const [added,setAdded]=useState(false);
   return (
     <>
       <SectionHeader eyebrow="Advisor meeting room" title="Answer precisely. Stop before overclaiming." description="Use the short answer first, then let the advisor pull for detail. The strongest story separates what is built, what is operationally next, and what remains genuinely uncertain." />
@@ -718,11 +829,12 @@ function CallRoom({ notes, setNotes, startMeeting }: { notes: string; setNotes: 
         <article className="surface"><div className="surface-heading"><div><span>Questions for the advisor</span><h3>Use the meeting to reduce uncertainty</h3></div></div><ol className="question-list"><li>Does this learner-model and outcome-measurement programme fit the technical project criteria?</li><li>Which labour and project-specific costs should be included or excluded?</li><li>What evidence of management, payroll and financial capacity should we prepare?</li><li>When could an eligible project begin, and what costs must wait for an agreement?</li><li>What milestones would make the project compelling for the current planning cycle?</li><li>Could Youth Employment support apply to a qualifying technical hire?</li></ol></article>
         <article className="surface notes-card"><div className="surface-heading"><div><span>Private notes</span><h3>Capture advice and follow-ups</h3></div><Badge tone="neutral">Saved on this device</Badge></div><textarea value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Record terminology Deepak uses, requested documents, eligibility guidance, next steps and promised follow-ups…" /><p>Device-local only. Avoid entering sensitive credentials or learner information.</p></article>
       </section>
+      <section className="surface followup-builder"><div className="surface-heading"><div><span>Meeting follow-up</span><h3>Turn advisor guidance into an owned action.</h3></div><Badge tone={added?"green":"neutral"}>{added?"Added to Action Centre":"Structured capture"}</Badge></div><div><label>Action title<input value={followup.title} onChange={(event)=>{setAdded(false);setFollowup({...followup,title:event.target.value});}} placeholder="e.g. Confirm contractor cost treatment"/></label><label>Owner<input value={followup.owner} onChange={(event)=>setFollowup({...followup,owner:event.target.value})}/></label><label>Due date<input value={followup.due} onChange={(event)=>setFollowup({...followup,due:event.target.value})}/></label><label className="followup-detail">Advisor guidance / evidence requested<textarea value={followup.detail} onChange={(event)=>setFollowup({...followup,detail:event.target.value})} placeholder="What was confirmed, what evidence is needed, and what remains open?"/></label></div><button className="primary-button" disabled={!followup.title.trim()} onClick={()=>{addAction(followup);setAdded(true);setFollowup({...followup,title:"",detail:""});}}>Add follow-up action</button></section>
     </>
   );
 }
 
-function ActionCentre({ statuses, cycleTask, notes, setNotes }: { statuses: Record<string, TaskStatus>; cycleTask: (id: string) => void; notes: string; setNotes: (value: string) => void }) {
+function ActionCentre({ statuses, cycleTask, notes, setNotes, customActions, setCustomActions }: { statuses: Record<string, TaskStatus>; cycleTask: (id: string) => void; notes: string; setNotes: (value: string) => void; customActions:CustomAction[]; setCustomActions:React.Dispatch<React.SetStateAction<CustomAction[]>> }) {
   const done = prepTasks.filter((task) => statuses[task.id] === "done").length;
   return (
     <>
@@ -734,6 +846,7 @@ function ActionCentre({ statuses, cycleTask, notes, setNotes }: { statuses: Reco
           return <article key={task.id} className={`task-card priority-${task.priority}`}><button className={`task-status status-${status}`} onClick={() => cycleTask(task.id)} aria-label={`Change status for ${task.title}`}><i />{status === "todo" ? "To do" : status === "progress" ? "In progress" : "Complete"}</button><div className="task-main"><h3>{task.title}</h3><p>{task.detail}</p><div><span>Owner · {task.owner}</span><span>Due · {task.due}</span><Badge tone={task.priority === "critical" ? "red" : task.priority === "high" ? "gold" : "neutral"}>{task.priority}</Badge></div></div></article>;
         })}
       </section>
+      {customActions.length>0&&<><div className="section-label">Advisor follow-up actions</div><section className="task-board">{customActions.map((task)=><article className="task-card priority-normal" key={task.id}><button className={`task-status status-${task.status}`} onClick={()=>setCustomActions((current)=>current.map((item)=>item.id===task.id?{...item,status:STATUS_ORDER[(STATUS_ORDER.indexOf(item.status)+1)%STATUS_ORDER.length]!}:item))}><i/>{task.status==="todo"?"To do":task.status==="progress"?"In progress":"Complete"}</button><div className="task-main"><h3>{task.title}</h3><p>{task.detail||"No additional detail recorded."}</p><div><span>Owner · {task.owner}</span><span>Due · {task.due}</span><button className="remove-action" onClick={()=>setCustomActions((current)=>current.filter((item)=>item.id!==task.id))}>Remove</button></div></div></article>)}</section></>}
       <section className="content-grid equal">
         <article className="surface"><div className="surface-heading"><div><span>Document room</span><h3>Evidence pack checklist</h3></div></div><div className="document-list">{[
           ["Corporate profile and active-standing evidence", "Critical"],

@@ -333,10 +333,55 @@ const supplementalSections: Record<string, Array<{ heading: string; body: string
   ],
 };
 
+function applyPlanningEstimates(body: string) {
+  const valueFor = (source: string, offset: number, token: string) => {
+    const context = source.slice(Math.max(0, offset - 90), offset).toLowerCase();
+    if (token.includes("CURRENT COMMIT")) return "project-start Git commit (verify at kickoff)";
+    if (context.includes("total project")) return "158,000 planning estimate";
+    if (context.includes("requested") || context.includes("irap contribution")) return "79,000 illustrative estimate";
+    if (context.includes("company cash") || context.includes("company contribution")) return "79,000 planning estimate";
+    if (context.includes("three-year revenue")) return "1,220,500 base-case estimate";
+    if (context.includes("export revenue")) return "427,175 base-case estimate";
+    if (context.includes("canadian payroll")) return "122,000 planning estimate";
+    if (context.includes("reserve")) return "25,000 planning reserve";
+    if (context.includes("pre-reimbursement")) return "41,600 planning exposure";
+    if (context.includes("budget")) return "7,000 planning allowance";
+    if (context.includes("price") || context.includes("package")) return "12,000 pilot estimate";
+    if (context.includes("annual commitment")) return "30,000 annual estimate";
+    if (context.includes("hour")) return "480 planned";
+    if (context.includes("latency") || context.includes("response")) return "250";
+    if (context.includes("coverage")) return "95";
+    if (context.includes("conversion")) return "30";
+    if (context.includes("fallback") || context.includes("error rate")) return "2";
+    if (context.includes("job")) return "2 planned";
+    if (context.includes("partner") || context.includes("interview")) return "5 planned";
+    if (context.includes("owner") || context.includes("prepared by") || context.includes("approver")) return "Project lead — verify name";
+    if (context.includes("date") || token.includes("DATE")) return "July 13, 2026 planning date";
+    if (context.includes("commit")) return "project-start commit — verify";
+    if (context.includes("cash") || context.includes("liquidity")) return "25,000 planning amount";
+    if (context.includes("revenue")) return "90,000 Year-1 planning estimate";
+    if (token.startsWith("$")) return "7,500 planning estimate";
+    if (token.endsWith("%")) return "10% planning threshold";
+    return "Planning assumption — verify from source record";
+  };
+  return body
+    .replace(/\$?\[INPUT[^\]]*\]%?/g, (token, offset, source) => valueFor(source, offset, token))
+    .replace(/\[PARTNER LEGAL NAME\]/g, "Prospective design partner — legal name to verify")
+    .replace(/\[PARTNER\]/g, "Prospective design partner")
+    .replace(/\[ADDRESS\]/g, "Partner address — verify from source record")
+    .replace(/\[PRODUCT\/SERVICE\]/g, "digital learning product")
+    .replace(/\[CUSTOMERS\/LEARNERS\]/g, "education providers and learners")
+    .replace(/\[SELECT\]/g, "shadow-mode pilot (planning selection)")
+    .replace(/\[NAME \/ TITLE \/ DATE\]/g, "Johnson / Project sponsor / July 13, 2026 — verify")
+    .replace(/\[confirm legal name\]|\[CONFIRM FULL LEGAL NAME\]/g, "— legal name to verify")
+    .replace(/\[confirm\]/g, "— verify")
+    .replace(/\[ITA-confirmed\]/g, "method pending written ITA confirmation");
+}
+
 export const irapDocuments: IrapDocument[] = baseDocuments.map((document) => ({
   ...document,
   sections: document.sections
-    ? [...document.sections, ...(supplementalSections[document.id] ?? [])]
+    ? [...document.sections, ...(supplementalSections[document.id] ?? [])].map((section) => ({ ...section, body: applyPlanningEstimates(section.body) }))
     : undefined,
 }));
 
