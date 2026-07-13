@@ -600,9 +600,52 @@ function BusinessCase() {
 }
 
 function Engine() {
+  const [copied,setCopied]=useState(false);
+  const mermaid=`flowchart LR
+  A[Learner answers in customer app] --> B[Customer grades answer]
+  B --> C[Send anonymous result to Opyjo]
+  C --> D[Update learner skill estimate]
+  D --> E{Choose next learning need}
+  E -->|Repeated errors| F[Easier scaffold item]
+  E -->|Weak skill| G[Target weakest skill]
+  E -->|Skills strong| H[Spaced review]
+  F --> I[Return item ID and reason]
+  G --> I
+  H --> I
+  I --> J[Customer displays its own content]
+  J --> A
+  D --> K[Versioned audit and outcome evidence]`;
   return (
     <>
       <SectionHeader eyebrow="Product mechanics" title="The next answer changes the next decision." description="The engine runs a closed learning loop. Every graded outcome updates one learner’s state, and the very next recommendation responds to that evidence." />
+      <PageNav items={[["plain-language","Plain-language tour"],["simple-flow","Simple flow"],["investor-flow","Investor view"],["engine-flow-title","Technical detail"],["mermaid-source","Mermaid"]]} />
+      <section className="plain-explainer" id="plain-language">
+        <div><Badge tone="green">Start here · no technical background needed</Badge><h2>Think of it as a GPS for learning.</h2><p>A normal learning app often gives everyone the same route. Opyjo watches only whether an anonymous learner gets an item right or wrong, estimates where that learner needs help, and recommends the next useful item. The customer still owns the learner relationship, questions, answers, and teaching experience.</p></div>
+        <aside><span>The simple promise</span><strong>Right learner.<br/>Right skill.<br/>Right next step.</strong><small>Every recommendation includes a recorded reason.</small></aside>
+      </section>
+      <section className="simple-engine-flow surface" id="simple-flow">
+        <div className="surface-heading"><div><span>One interaction in plain English</span><h3>Five things happen after a learner answers.</h3></div><Badge tone="blue">Usually in milliseconds</Badge></div>
+        <div className="simple-flow-row">{[
+          ["1","Answer","The learner answers inside the customer’s app.","The question and identity stay there."],
+          ["2","Signal","The customer sends an anonymous right-or-wrong result.","No question text or answer key."],
+          ["3","Learn","Opyjo updates its estimate of that learner’s skill.","Hard successes count more; easy misses matter."],
+          ["4","Choose","The engine finds the most useful next skill and difficulty.","It can scaffold, target a weakness, or review."],
+          ["5","Explain","It returns an item ID and a reason.","The customer displays its own question."],
+        ].map(([number,title,body,note],index)=><div className="simple-flow-step" key={number}><i>{number}</i><strong>{title}</strong><p>{body}</p><small>{note}</small>{index<4&&<b>→</b>}</div>)}</div>
+        <div className="simple-loop-note"><span>↺</span><p><strong>Then it repeats.</strong> Each new answer gives the engine more evidence, so its future choices can become better informed.</p></div>
+      </section>
+
+      <section className="investor-flow surface" id="investor-flow">
+        <div className="surface-heading"><div><span>End-to-end investor view</span><h3>How product activity can become defensible enterprise value.</h3></div></div>
+        <div className="investor-map">
+          <article className="investor-customer"><span>01 · Customer asset</span><strong>Learning product</strong><p>Existing learners, content, grading, and distribution.</p><small>Customer retains custody</small></article><b>→</b>
+          <article className="investor-platform"><span>02 · Opyjo layer</span><strong>Adaptive API</strong><p>Anonymous outcomes become learner-state updates and auditable recommendations.</p><small>Fast integration</small></article><b>→</b>
+          <article className="investor-evidence"><span>03 · Compounding asset</span><strong>Outcome evidence</strong><p>Calibration, model decisions, cross-tenant learning, and reproducible experiments.</p><small>Potential moat</small></article><b>→</b>
+          <article className="investor-value"><span>04 · Business result</span><strong>Recurring SaaS</strong><p>Onboarding, usage, annual contracts, and enterprise controls.</p><small>Canadian IP and revenue</small></article>
+        </div>
+        <div className="investor-two-sided"><div><span>Why customers buy</span><ul><li>Add personalization without building a research team</li><li>Keep content and direct learner identity</li><li>Receive explainable recommendations</li><li>Measure whether learning actually improves</li></ul></div><div><span>What R&D must prove</span><ul><li>Reliable decisions with sparse learner data</li><li>Stable empirical item calibration</li><li>Improved retention or time-to-mastery</li><li>Generalization across different customers</li></ul></div></div>
+        <p className="investor-truth"><strong>Important:</strong> the API foundation exists. The compounding evidence and defensibility are the intended outcomes of the proposed R&D—not claims that have already been proven.</p>
+      </section>
       <section className="loop-diagram">
         {[
           ["01", "Request", "The tenant backend sends an opaque learner ID and eligible scope."],
@@ -679,6 +722,7 @@ function Engine() {
         <article className="surface"><div className="surface-heading"><div><span>What the service receives</span><h3>Minimal learning metadata</h3></div></div><div className="data-chips"><span>tenant key</span><span>opaque learner ID</span><span>item ID</span><span>skill key</span><span>difficulty 1–5</span><span>correct / incorrect</span><span>idempotency key</span></div></article>
         <article className="surface no-data"><div className="surface-heading"><div><span>What stays with the customer</span><h3>Content and identity boundary</h3></div></div><div className="data-chips"><span>learner name</span><span>email</span><span>birthdate</span><span>question text</span><span>choices</span><span>answer key</span><span>media</span></div></article>
       </section>
+      <section className="mermaid-panel surface" id="mermaid-source"><div className="surface-heading"><div><span>Portable diagram source</span><h3>Simplified Mermaid flowchart</h3></div><button className="secondary-button" onClick={async()=>{await navigator.clipboard.writeText(mermaid);setCopied(true);window.setTimeout(()=>setCopied(false),1800);}}>{copied?"Copied":"Copy Mermaid"}</button></div><p>Paste this into Mermaid Live, GitHub, Notion, or a compatible presentation workflow.</p><pre><code>{mermaid}</code></pre></section>
     </>
   );
 }
