@@ -526,6 +526,32 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .scenario-comparison { margin-top: 14px; scroll-margin-top: 145px; }.comparison-table { overflow-x: auto; border: 1px solid var(--line); border-radius: 9px; }.comparison-table > div { display: grid; min-width: 650px; grid-template-columns: 1.35fr repeat(3,1fr); border-bottom: 1px solid var(--line); }.comparison-table > div:last-child { border: 0; }.comparison-table span,.comparison-table strong,.comparison-table button { padding: 12px 14px; font-size: 10px; text-align: right; text-transform: capitalize; }.comparison-table span { text-align: left; }.comparison-table strong { background: var(--paper); }.comparison-table button { border: 0; border-left: 1px solid var(--line); background: white; cursor: pointer; font-variant-numeric: tabular-nums; }.comparison-table button:hover,.comparison-table button.selected { background: var(--blue-soft); color: var(--blue); font-weight: 800; }
 .guidance-label,.guidance-source,.service-standard,.estimate-metrics,.estimate-layout,.estimate-chart { scroll-margin-top: 145px; }
 
+/* Readability pass: keep the compact dashboard character without relying on tiny text. */
+.nav-item, .brand-block span, .sidebar-footer span, .breadcrumb, .search-wrap input,
+.metric span, .surface-heading span, .section-label, .badge, .page-nav a,
+.document-card > p, .document-status, .estimate-fields label, .estimate-breakdown > div,
+.estimate-chart > div, .comparison-table span, .comparison-table strong, .comparison-table button,
+.guidance-source p, .service-standard p, .guidance-timeline p, .required-info strong,
+.required-info small, .assessment-table strong, .assessment-table p, .assessment-table small {
+  font-size: 12px;
+}
+.nav-group > p, .eyebrow, .panel-label, .surface-heading span, .section-label,
+.document-card-top span, .guidance-source span, .service-standard span,
+.next-action > div:first-child > span, .readiness-heading span {
+  font-size: 11px;
+}
+.detail-list, .truth-list p, .compact-tasks small, .segment-card p, .value-list span,
+.pricing-ladder small, .evidence-list span, .milestone-table, .vault-list p,
+.document-reader main p, .guidance-callout, .guidance-disclaimer, .guidance-caution,
+.estimate-warning, .estimate-source, .estimate-chart p {
+  font-size: 12px;
+  line-height: 1.6;
+}
+.document-card h3, .eligibility-grid h3, .guidance-timeline h3 { font-size: 15px; }
+.document-card-top i, .required-info > div > span, .assessment-table .assessment-head,
+.estimate-fields small, .estimate-groups summary span { font-size: 10px; }
+.estimate-fields input { font-size: 13px; }
+
 .meeting-overlay { position: fixed; inset: 0; z-index: 100; display: flex; flex-direction: column; background: var(--navy); color: white; animation: fade .2s ease; }
 .meeting-toolbar { display: flex; height: 65px; align-items: center; justify-content: space-between; padding: 0 28px; border-bottom: 1px solid rgba(255,255,255,.09); color: #8f9aae; font-family: var(--font-mono); font-size: 10px; }
 .meeting-toolbar button { padding: 8px 12px; border: 1px solid rgba(255,255,255,.15); border-radius: 7px; background: transparent; color: white; cursor: pointer; }
