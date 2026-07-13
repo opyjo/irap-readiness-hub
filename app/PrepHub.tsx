@@ -56,6 +56,10 @@ function Badge({ children, tone = "neutral" }: { children: React.ReactNode; tone
   return <span className={`badge badge-${tone}`}>{children}</span>;
 }
 
+function PageNav({ items }: { items: Array<[string, string]> }) {
+  return <nav className="page-nav" aria-label="On this page">{items.map(([id, label]) => <a key={id} href={`#${id}`}>{label}</a>)}</nav>;
+}
+
 export function PrepHub() {
   const [view, setView] = useState<ViewId>("overview");
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -228,12 +232,13 @@ function Guidance() {
   return (
     <>
       <SectionHeader eyebrow="Official programme guidance" title="What NRC IRAP evaluates—and how Opyjo should respond." description="A working interpretation of current NRC guidance for technology-innovation financial support. Official programme language is separated from Opyjo preparation actions so the application remains accurate." />
-      <section className="guidance-source">
+      <PageNav items={[["guidance-source","Source"],["eligibility","Eligibility"],["assessment","Assessment"],["process","Process"],["standards","Standards"]]} />
+      <section className="guidance-source" id="guidance-source">
         <div><span>Official source</span><h2>NRC IRAP financial support for technology innovation</h2><p>Current NRC guidance says minimum eligibility starts the relationship but does not guarantee support. Funding decisions are merit-based, consultative, and subject to available funds.</p></div>
         <a href="https://nrc.canada.ca/en/support-technology-innovation/financial-support-technology-innovation" target="_blank" rel="noreferrer">Open NRC guidance ↗</a>
       </section>
 
-      <div className="guidance-label"><span>01</span><div><h2>Minimum company eligibility</h2><p>All conditions should be supported by corporate source records.</p></div></div>
+      <div className="guidance-label" id="eligibility"><span>01</span><div><h2>Minimum company eligibility</h2><p>All conditions should be supported by corporate source records.</p></div></div>
       <section className="eligibility-grid">
         {[
           ["Incorporated", "A for-profit corporation operating in Canada."],
@@ -255,7 +260,7 @@ function Guidance() {
         ].map(([title, body], index) => <div key={title}><span>{String(index + 1).padStart(2, "0")}</span><p><strong>{title}</strong><small>{body}</small></p></div>)}
       </section>
 
-      <div className="guidance-label"><span>03</span><div><h2>How a funding project is assessed</h2><p>The application should make each assessment area easy to verify.</p></div></div>
+      <div className="guidance-label" id="assessment"><span>03</span><div><h2>How a funding project is assessed</h2><p>The application should make each assessment area easy to verify.</p></div></div>
       <section className="assessment-table">
         <div className="assessment-head"><span>Assessment area</span><span>What the case must establish</span><span>Opyjo readiness</span><span>Next evidence</span></div>
         {assessment.map(([area, meaning, status, action]) => <div key={area}><strong>{area}</strong><p>{meaning}</p><Badge tone={status.startsWith("Strong") || status === "Drafted" ? "green" : "gold"}>{status}</Badge><small>{action}</small></div>)}
@@ -266,7 +271,7 @@ function Guidance() {
         <article className="surface"><div className="surface-heading"><div><span>Official exclusions</span><h3>What NRC says it does not fund</h3></div></div><ul className="detail-list exclusion-list"><li>Day-to-day operating costs</li><li>Non-technical or purely commercial activities</li><li>Work performed outside Canada</li><li>Research with limited commercialization potential</li></ul><p className="guidance-caution danger">Keep routine hosting, ordinary maintenance, sales, marketing, corporate administration, and unrelated Brightwick work outside the R&D claim unless the agreement explicitly permits a specific cost.</p></article>
       </section>
 
-      <div className="guidance-label"><span>04</span><div><h2>Relationship and funding process</h2><p>IRAP generally develops the project with the company rather than accepting a cold, fixed grant application.</p></div></div>
+      <div className="guidance-label" id="process"><span>04</span><div><h2>Relationship and funding process</h2><p>IRAP generally develops the project with the company rather than accepting a cold, fixed grant application.</p></div></div>
       <section className="guidance-timeline">
         {[
           ["1", "Initial contact", "A senior executive contacts NRC IRAP. The contact centre gathers business information and assesses readiness for an advisory conversation."],
@@ -278,7 +283,7 @@ function Guidance() {
         ].map(([number, title, body]) => <article key={number}><i>{number}</i><div><h3>{title}</h3><p>{body}</p></div></article>)}
       </section>
 
-      <section className="service-standard">
+      <section className="service-standard" id="standards">
         <div><span>Published service standards</span><h2>Plan liquidity conservatively.</h2><p>After NRC receives a complete proposal and requested documentation, its published funding-decision target varies by contribution size. For payments, NRC states a target of issuing payment within 35 business days after receiving all required documents and a correctly completed claim.</p></div>
         <a href="https://nrc.canada.ca/en/support-technology-innovation/nrc-irap-service-standards" target="_blank" rel="noreferrer">Read service standards ↗</a>
       </section>
@@ -345,11 +350,12 @@ function DocumentVault() {
       <div className="vault-note"><strong>Before submission:</strong> replace planning language with verified figures, dates, names, source attachments, and advisor-confirmed eligibility. These are working drafts, not official NRC forms.</div>
       <div className="vault-section-title"><div><span>Prepared documents</span><h2>Read and download</h2></div><p>{generated.length} documents</p></div>
       <section className="prepared-grid">
-        {generated.map((document) => <article className="document-card" key={document.id}>
+        {generated.map((document) => { const inputs = document.sections?.reduce((total, section) => total + (section.body.match(/\[INPUT\]/g)?.length ?? 0), 0) ?? 0; return <article className="document-card" key={document.id}>
           <div className="document-card-top"><span>{document.category}</span><i>DOC</i></div>
           <h3>{document.title}</h3><p>{document.description}</p>
+          <div className="document-status"><span><i className={inputs ? "draft" : "ready"}/>{inputs ? "Needs input" : "Ready to review"}</span><small>{inputs ? `${inputs} fields remaining` : "Draft complete"}</small></div>
           <div className="document-card-actions"><button className="read-button" onClick={() => setPreview(document)}>Read document</button><button className="download-button" disabled={busy !== null} onClick={() => download(document)} aria-label={`Download ${document.title}`}>↓</button></div>
-        </article>)}
+        </article>})}
       </section>
       <div className="vault-section-title source-title"><div><span>Required source records</span><h2>Collect and retain</h2></div><p>{sourceDocuments.length} items</p></div>
       <section className="vault-groups">
@@ -382,6 +388,12 @@ function Overview({ readiness, completed, navigate, countdown, statuses, cycleTa
   statuses: Record<string, TaskStatus>;
   cycleTask: (id: string) => void;
 }) {
+  const nextTask = prepTasks.find((task) => statuses[task.id] !== "done") ?? prepTasks[0]!;
+  const readinessAreas = [
+    ["Corporate", statuses["corporate-standing"] === "done" ? 100 : 55, "business"],
+    ["Financial", 42, "estimates"], ["Technical", 82, "engine"], ["Commercial", 48, "business"],
+    ["Evidence", Math.max(35, readiness), "documents"], ["Meeting", Math.min(100, readiness + 12), "call"],
+  ] as const;
   return (
     <>
       <SectionHeader eyebrow="Executive command centre" title="Walk into the meeting with one precise story." description="The product case, technical truth, R&D uncertainty and commercial path—organized as a working preparation system rather than a static document." />
@@ -408,6 +420,16 @@ function Overview({ readiness, completed, navigate, countdown, statuses, cycleTa
             <span>Thu, July 16</span><span>12:00–1:00 PM EDT</span><span>Microsoft Teams</span>
           </div>
         </div>
+      </section>
+
+      <section className="next-action">
+        <div><span>Next best action</span><h2>{nextTask.title}</h2><p>{nextTask.detail}</p></div>
+        <div><small>{nextTask.owner} · {nextTask.due}</small><button onClick={() => navigate("actions")}>Open action centre <span>→</span></button></div>
+      </section>
+
+      <section className="readiness-areas">
+        <div className="readiness-heading"><div><span>Readiness by area</span><h2>See what is holding the application back.</h2></div><strong>{readiness}% overall</strong></div>
+        <div>{readinessAreas.map(([label, value, destination]) => <button key={label} onClick={() => navigate(destination as ViewId)}><span><strong>{label}</strong><small>{value}%</small></span><i><b style={{ width: `${value}%` }} /></i></button>)}</div>
       </section>
 
       <section className="metrics-grid">
@@ -656,6 +678,10 @@ function Estimates({ scenario, setScenario, estimates, setEstimates }: { scenari
     ["contributionRate", "Illustrative contribution", "%"], ["claimDelayMonths", "Claim delay", "months"], ["monthlyBurn", "Non-project monthly burn", "CAD"], ["operatingReserve", "Operating reserve", "CAD"],
     ["annualContract", "Annual contract value", "CAD"], ["year1Tenants", "Year 1 tenants", "tenants"], ["year2Tenants", "Year 2 tenants", "tenants"], ["year3Tenants", "Year 3 tenants", "tenants"], ["exportShare", "Export revenue share", "%"], ["hires", "Incremental Canadian jobs", "jobs"],
   ];
+  const groups = [
+    ["Labour plan", fields.slice(0,4)], ["Funding and liquidity", fields.slice(4,8)], ["Revenue and benefits", fields.slice(8)],
+  ] as const;
+  const comparison = (["lean","base","expanded"] as ScenarioId[]).map((id) => ({ id, result: calculate(estimates[id]) }));
   async function exportPdf() {
     await downloadDocument({ id: `estimate-${scenario}`, title: `${scenario[0]!.toUpperCase()+scenario.slice(1)} IRAP planning estimate`, category: "Financial", generated: true, description: "", sections: [
       { heading: "Important status", body: "Planning estimates in Canadian dollars. Potential eligibility and the contribution percentage are illustrative only and require written NRC IRAP confirmation." },
@@ -666,11 +692,13 @@ function Estimates({ scenario, setScenario, estimates, setEstimates }: { scenari
   }
   return <>
     <SectionHeader eyebrow="Integrated estimate model" title="Model the project, liquidity, and Canadian benefit." description="Editable planning estimates in CAD. Nothing in this model confirms cost eligibility or an NRC IRAP contribution rate." />
+    <PageNav items={[["estimate-summary","Summary"],["estimate-assumptions","Assumptions"],["estimate-comparison","Compare"],["estimate-revenue","Revenue"]]} />
     <div className="estimate-toolbar"><div>{(["lean","base","expanded"] as ScenarioId[]).map((id) => <button className={scenario===id?"active":""} key={id} onClick={()=>setScenario(id)}>{id}</button>)}</div><button className="secondary-button" onClick={()=>setEstimates(defaults)}>Reset to planning defaults</button><button className="primary-button" onClick={exportPdf}>Export estimate PDF</button></div>
     <div className="estimate-warning"><strong>Advisor confirmation required.</strong> The model treats all entered project costs as potentially eligible for planning. Replace this treatment with the signed contribution agreement.</div>
-    <section className="estimate-metrics"><Metric value={cad(result.total)} label="Total project cost" tone="dark"/><Metric value={cad(result.request)} label={`Illustrative request · ${input.contributionRate}%`} tone="gold"/><Metric value={cad(result.companyShare)} label="Company contribution"/><Metric value={cad(result.workingCapital)} label="Minimum working capital"/></section>
-    <section className="estimate-layout"><article className="surface"><div className="surface-heading"><div><span>Editable assumptions</span><h3>{scenario[0]!.toUpperCase()+scenario.slice(1)} scenario</h3></div></div><div className="estimate-fields">{fields.map(([key,label,suffix])=><label key={key}><span>{label}<small>{suffix}</small></span><input type="number" min="0" value={input[key]} onChange={(e)=>update(key,e.target.value)}/></label>)}</div></article>
-    <article className="surface"><div className="surface-heading"><div><span>Calculated outputs</span><h3>Cost and cash requirement</h3></div></div><div className="estimate-breakdown">{[["Canadian R&D wages",result.wages],["Employer cash-cost allowance",result.payroll],["Specialist contractor",result.contractor],["Infrastructure and security",input.infrastructure+input.security],["Pre-reimbursement exposure",result.preReimbursement]].map(([label,value])=><div key={String(label)}><span>{label}</span><strong>{cad(Number(value))}</strong></div>)}</div><div className="estimate-chart"><h3>Three-year SaaS revenue</h3>{result.revenue.map((value,index)=><div key={index}><span>Year {index+1}</span><i style={{width:`${Math.max(4,value/Math.max(...result.revenue)*100)}%`}}/><strong>{cad(value)}</strong></div>)}<p>{cad(result.exportRevenue)} projected export revenue · {input.hires} incremental Canadian jobs</p></div></article></section>
+    <section className="estimate-metrics" id="estimate-summary"><Metric value={cad(result.total)} label="Total project cost" tone="dark"/><Metric value={cad(result.request)} label={`Illustrative request · ${input.contributionRate}%`} tone="gold"/><Metric value={cad(result.companyShare)} label="Company contribution"/><Metric value={cad(result.workingCapital)} label="Minimum working capital"/></section>
+    <section className="estimate-layout" id="estimate-assumptions"><article className="surface"><div className="surface-heading"><div><span>Editable assumptions</span><h3>{scenario[0]!.toUpperCase()+scenario.slice(1)} scenario</h3></div></div><div className="estimate-groups">{groups.map(([title,group], index)=><details key={title} open={index===0}><summary>{title}<span>{group.length} inputs</span></summary><div className="estimate-fields">{group.map(([key,label,suffix])=><label key={key}><span>{label}<small>{suffix}</small></span><input aria-label={label} type="number" min="0" value={input[key]} onChange={(e)=>update(key,e.target.value)}/></label>)}</div></details>)}</div></article>
+    <article className="surface sticky-results"><div className="surface-heading"><div><span>Calculated outputs</span><h3>Cost and cash requirement</h3></div></div><div className="estimate-breakdown">{[["Canadian R&D wages",result.wages],["Employer cash-cost allowance",result.payroll],["Specialist contractor",result.contractor],["Infrastructure and security",input.infrastructure+input.security],["Pre-reimbursement exposure",result.preReimbursement]].map(([label,value])=><div key={String(label)}><span>{label}</span><strong>{cad(Number(value))}</strong></div>)}</div><div className="estimate-chart" id="estimate-revenue"><h3>Three-year SaaS revenue</h3>{result.revenue.map((value,index)=><div key={index}><span>Year {index+1}</span><i style={{width:`${Math.max(4,value/Math.max(...result.revenue)*100)}%`}}/><strong>{cad(value)}</strong></div>)}<p>{cad(result.exportRevenue)} projected export revenue · {input.hires} incremental Canadian jobs</p></div></article></section>
+    <section className="scenario-comparison surface" id="estimate-comparison"><div className="surface-heading"><div><span>Scenario comparison</span><h3>Understand the trade-offs before choosing.</h3></div></div><div className="comparison-table"><div><span>Metric</span>{comparison.map(({id})=><strong key={id}>{id}</strong>)}</div>{[["Project cost","total"],["Illustrative request","request"],["Working capital","workingCapital"],["Three-year revenue","threeYearRevenue"]].map(([label,key])=><div key={label}><span>{label}</span>{comparison.map(({id,result:row})=><button className={scenario===id?"selected":""} key={id} onClick={()=>setScenario(id)}>{cad(row[key as keyof typeof row] as number)}</button>)}</div>)}</div></section>
     <p className="estimate-source">Wage defaults are Toronto planning benchmarks from Government of Canada Job Bank references recorded in the model plan. Actual payroll, historical revenue, cash, ownership, and customer evidence remain source-record inputs.</p>
   </>;
 }
