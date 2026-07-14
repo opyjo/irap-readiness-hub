@@ -6,26 +6,43 @@ async function render() {
   const workerUrl = new URL("../dist/server/index.js", import.meta.url);
   workerUrl.searchParams.set("test", `${process.pid}-${Date.now()}`);
   const { default: worker } = await import(workerUrl.href);
-  return worker.fetch(new Request("http://localhost/", { headers: { accept: "text/html" } }), { ASSETS: { fetch: async () => new Response("Not found", { status: 404 }) } }, { waitUntil() {}, passThroughOnException() {} });
+  return worker.fetch(
+    new Request("http://localhost/", { headers: { accept: "text/html" } }),
+    { ASSETS: { fetch: async () => new Response("Not found", { status: 404 }) } },
+    { waitUntil() {}, passThroughOnException() {} },
+  );
 }
 
-test("server-renders the adaptive engine console", async () => {
+test("server-renders the complete IRAP readiness application", async () => {
   const response = await render();
   assert.equal(response.status, 200);
+  assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
+
   const html = await response.text();
-  assert.match(html, /Opyjo Adaptive Engine \| Canadian Learning Intelligence/i);
-  assert.match(html, /Your adaptive engine is healthy/i);
-  assert.match(html, /Ontario coverage/i);
-  assert.match(html, /All systems operational/i);
+  assert.match(html, /<title>IRAP Readiness Hub \| Opyjo Adaptive Engine<\/title>/i);
+  assert.match(html, /Walk into the meeting with one precise story/);
+  assert.match(html, /Adaptive learning infrastructure, built in Canada/);
+  assert.match(html, /Command centre/);
+  assert.doesNotMatch(html, /codex-preview|Your site is taking shape|react-loading-skeleton/i);
 });
 
-test("includes curriculum, adaptation, analytics, trust and integration workspaces", async () => {
-  const [component, data, css] = await Promise.all([readFile(new URL("../app/AdaptiveHub.tsx", import.meta.url), "utf8"), readFile(new URL("../app/adaptiveData.ts", import.meta.url), "utf8"), readFile(new URL("../app/globals.css", import.meta.url), "utf8")]);
-  assert.match(component, /function Curriculum/);
-  assert.match(component, /function Sessions/);
-  assert.match(component, /function Trust/);
-  assert.match(component, /function Api/);
-  assert.match(data, /Financial Literacy/);
-  assert.match(data, /PREREQUISITE_GAP/);
-  assert.match(css, /@media\(max-width:580px\)/);
+test("includes business, technical, research and funding workspaces", async () => {
+  const [component, data, css, packageJson] = await Promise.all([
+    readFile(new URL("../app/PrepHub.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/data.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
+    readFile(new URL("../package.json", import.meta.url), "utf8"),
+  ]);
+
+  assert.match(component, /function BusinessCase/);
+  assert.match(component, /function Architecture/);
+  assert.match(component, /function Research/);
+  assert.match(component, /function Funding/);
+  assert.match(component, /localStorage/);
+  assert.match(component, /Start meeting mode/);
+  assert.match(data, /Learner model under sparse data/);
+  assert.match(data, /What would IRAP accelerate/);
+  assert.match(css, /prefers-reduced-motion/);
+  assert.match(css, /@media print/);
+  assert.doesNotMatch(packageJson, /react-loading-skeleton/);
 });

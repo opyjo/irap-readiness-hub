@@ -6,14 +6,14 @@ const sans = Geist({ variable: "--font-sans", subsets: ["latin"] });
 const mono = Geist_Mono({ variable: "--font-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Opyjo Adaptive Engine | Canadian Learning Intelligence",
+  title: "IRAP Readiness Hub | Opyjo Adaptive Engine",
   description:
-    "Ontario-first adaptive learning infrastructure for Canadian education platforms and publishers.",
+    "A private executive workspace for the Opyjo Adaptive Engine business case, technical architecture, R&D plan, funding readiness, and NRC IRAP meeting preparation.",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en-CA">
+    <html lang="en">
       <body className={`${sans.variable} ${mono.variable}`}>{children}</body>
     </html>
   );

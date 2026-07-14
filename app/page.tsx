@@ -1,5 +1,5 @@
-import { AdaptiveHub } from "./AdaptiveHub";
+import { PrepHub } from "./PrepHub";
 
 export default function Home() {
-  return <AdaptiveHub />;
+  return <PrepHub />;
 }
