@@ -23,6 +23,7 @@ test("server-renders the complete IRAP readiness application", async () => {
   assert.match(html, /Walk into the meeting with one precise story/);
   assert.match(html, /Adaptive learning infrastructure, built in Canada/);
   assert.match(html, /Command centre/);
+  assert.match(html, /Adaptive engine explained/);
   assert.doesNotMatch(html, /codex-preview|Your site is taking shape|react-loading-skeleton/i);
 });
 
@@ -40,6 +41,7 @@ test("includes business, technical, research and funding workspaces", async () =
   assert.match(component, /function Funding/);
   assert.match(component, /localStorage/);
   assert.match(component, /Start meeting mode/);
+  assert.match(component, /view === "explainer" && <Explainer/);
   assert.match(data, /Learner model under sparse data/);
   assert.match(data, /What would IRAP accelerate/);
   assert.match(css, /prefers-reduced-motion/);

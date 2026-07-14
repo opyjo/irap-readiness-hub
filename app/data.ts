@@ -28,7 +28,7 @@ export const navGroups: Array<{
     label: "The product",
     items: [
       { id: "engine", label: "How it works", index: "02" },
-      { id: "explainer", label: "Explained simply", index: "03" },
+      { id: "explainer", label: "Adaptive engine explained", index: "03" },
       { id: "architecture", label: "Technical system", index: "04" },
       { id: "research", label: "R&D programme", index: "05" },
     ],
