@@ -17,6 +17,7 @@ import { OwnerRunbook } from "./OwnerRunbook";
 import { FounderResearch } from "./FounderResearch";
 import { PitchToolkit } from "./PitchToolkit";
 import { FounderFieldGuide } from "./FounderFieldGuide";
+import { ArchitectureAtlas } from "./ArchitectureAtlas";
 import { cad, calculate, defaults, normalize, type EstimateInputs, type ScenarioId } from "./estimates";
 import { defaultAssumptions, type Assumption, type AssumptionStatus } from "./assumptions";
 
@@ -257,6 +258,7 @@ export function PrepHub({ initialView = "overview" }: { initialView?: ViewId }) 
           {view === "integration" && <IntegrationGuide />}
           {view === "runbook" && <OwnerRunbook />}
           {view === "architecture" && <Architecture />}
+          {view === "architecture-atlas" && <ArchitectureAtlas />}
           {view === "research" && <Research />}
           {view === "funding" && <Funding />}
           {view === "estimates" && <Estimates scenario={scenario} setScenario={setScenario} estimates={estimates} setEstimates={setEstimates} />}

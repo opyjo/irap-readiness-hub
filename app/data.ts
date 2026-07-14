@@ -9,6 +9,7 @@ export type ViewId =
   | "integration"
   | "runbook"
   | "architecture"
+  | "architecture-atlas"
   | "research"
   | "funding"
   | "estimates"
@@ -40,19 +41,20 @@ export const navGroups: Array<{
       { id: "integration", label: "Connect your app", index: "07" },
       { id: "runbook", label: "Owner runbook", index: "08" },
       { id: "architecture", label: "Technical system", index: "09" },
-      { id: "research", label: "R&D programme", index: "10" },
+      { id: "architecture-atlas", label: "Architecture atlas", index: "10" },
+      { id: "research", label: "R&D programme", index: "11" },
     ],
   },
   {
     label: "IRAP readiness",
     items: [
-      { id: "funding", label: "Funding case", index: "11" },
-      { id: "estimates", label: "Estimates", index: "12" },
-      { id: "assumptions", label: "Assumptions register", index: "13" },
-      { id: "guidance", label: "NRC IRAP guidance", index: "14" },
-      { id: "documents", label: "Document vault", index: "15" },
-      { id: "call", label: "Meeting room", index: "16" },
-      { id: "actions", label: "Action centre", index: "17" },
+      { id: "funding", label: "Funding case", index: "12" },
+      { id: "estimates", label: "Estimates", index: "13" },
+      { id: "assumptions", label: "Assumptions register", index: "14" },
+      { id: "guidance", label: "NRC IRAP guidance", index: "15" },
+      { id: "documents", label: "Document vault", index: "16" },
+      { id: "call", label: "Meeting room", index: "17" },
+      { id: "actions", label: "Action centre", index: "18" },
     ],
   },
 ];
