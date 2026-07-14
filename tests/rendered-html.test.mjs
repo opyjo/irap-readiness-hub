@@ -2,12 +2,12 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-async function render() {
+async function render(path = "/") {
   const workerUrl = new URL("../dist/server/index.js", import.meta.url);
   workerUrl.searchParams.set("test", `${process.pid}-${Date.now()}`);
   const { default: worker } = await import(workerUrl.href);
   return worker.fetch(
-    new Request("http://localhost/", { headers: { accept: "text/html" } }),
+    new Request(`http://localhost${path}`, { headers: { accept: "text/html" } }),
     { ASSETS: { fetch: async () => new Response("Not found", { status: 404 }) } },
     { waitUntil() {}, passThroughOnException() {} },
   );
@@ -29,6 +29,16 @@ test("server-renders the complete IRAP readiness application", async () => {
   assert.match(html, /Founder research/);
   assert.match(html, /Founder pitch toolkit/);
   assert.doesNotMatch(html, /codex-preview|Your site is taking shape|react-loading-skeleton/i);
+});
+
+test("supports shareable workspace URLs and reading navigation", async () => {
+  const response = await render("/pitch-toolkit");
+  assert.equal(response.status, 200);
+  const html = await response.text();
+  assert.match(html, /Master the Adaptive Engine story/);
+  assert.match(html, /Reading preferences/);
+  assert.match(html, /Reading progress/);
+  assert.match(html, /Founder pitch toolkit/);
 });
 
 test("includes business, technical, research and funding workspaces", async () => {

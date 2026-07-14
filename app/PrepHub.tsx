@@ -22,6 +22,8 @@ import { defaultAssumptions, type Assumption, type AssumptionStatus } from "./as
 const MEETING_AT = new Date("2026-07-16T12:00:00-04:00");
 const STATUS_ORDER: TaskStatus[] = ["todo", "progress", "done"];
 type Theme = "light" | "dark";
+type ReadingSize = "normal" | "large" | "xlarge";
+type ReadingWidth = "wide" | "focused";
 type DocumentStage = "planning" | "review" | "verified" | "ready";
 type CustomAction = { id: string; title: string; detail: string; owner: string; due: string; status: TaskStatus };
 
@@ -91,8 +93,8 @@ function documentsWithAssumptions(assumptions: Assumption[]) {
   return irapDocuments.map((document) => ({ ...document, sections: document.sections?.map((section) => ({ ...section, body: replacements.reduce((body,[pattern,value]) => body.replace(pattern,value), section.body) })) }));
 }
 
-export function PrepHub() {
-  const [view, setView] = useState<ViewId>("overview");
+export function PrepHub({ initialView = "overview" }: { initialView?: ViewId }) {
+  const [view, setView] = useState<ViewId>(initialView);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [meetingMode, setMeetingMode] = useState(false);
@@ -108,6 +110,15 @@ export function PrepHub() {
   const [assumptions, setAssumptions] = useState<Assumption[]>(defaultAssumptions);
   const [documentStages, setDocumentStages] = useState<Record<string, DocumentStage>>({});
   const [customActions, setCustomActions] = useState<CustomAction[]>([]);
+  const [collapsedGroups, setCollapsedGroups] = useState<string[]>([]);
+  const [readingOpen, setReadingOpen] = useState(false);
+  const [readingSize, setReadingSize] = useState<ReadingSize>("normal");
+  const [readingWidth, setReadingWidth] = useState<ReadingWidth>("wide");
+  const [reducedMotion, setReducedMotion] = useState(false);
+  const [resumeView, setResumeView] = useState<ViewId | null>(null);
+  const [readingProgress, setReadingProgress] = useState(0);
+  const [activeSection, setActiveSection] = useState("");
+  const [checkProgress, setCheckProgress] = useState<Record<string, number>>({});
   const countdown = useCountdown();
 
   useEffect(() => {
@@ -117,13 +128,19 @@ export function PrepHub() {
       const hash = window.location.hash.replace("#", "") as ViewId;
       const storedEstimates = window.localStorage.getItem("irap-estimates");
       const storedWorkspace = window.localStorage.getItem("irap-workspace-v2");
+      const storedNavigation = window.localStorage.getItem("irap-navigation-v1");
+      const storedReading = window.localStorage.getItem("irap-reading-v1");
       if (storedStatuses) {
         try { setStatuses((current) => ({ ...current, ...JSON.parse(storedStatuses) })); } catch { /* ignore invalid local data */ }
       }
       if (storedNotes) setNotes(storedNotes);
       if (storedEstimates) { try { const saved = JSON.parse(storedEstimates); setScenario(saved.scenario ?? "base"); setEstimates({ ...defaults, ...saved.estimates }); } catch { /* ignore */ } }
       if (storedWorkspace) { try { const saved = JSON.parse(storedWorkspace); setTheme(saved.theme ?? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")); setAssumptions(saved.assumptions ?? defaultAssumptions); setDocumentStages(saved.documentStages ?? {}); setCustomActions(saved.customActions ?? []); } catch { /* ignore */ } } else setTheme(window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
-      if (navGroups.some((group) => group.items.some((item) => item.id === hash))) setView(hash);
+      if (storedNavigation) { try { const saved=JSON.parse(storedNavigation); setCollapsedGroups(saved.collapsedGroups??[]); setResumeView(saved.lastView??null); setCheckProgress(saved.checkProgress??{}); } catch { /* ignore */ } }
+      if (storedReading) { try { const saved=JSON.parse(storedReading); setReadingSize(saved.size??"normal"); setReadingWidth(saved.width??"wide"); setReducedMotion(saved.reducedMotion??false); } catch { /* ignore */ } }
+      const pathView=window.location.pathname.split("/").filter(Boolean)[0] as ViewId;
+      if (navGroups.some((group) => group.items.some((item) => item.id === pathView))) setView(pathView);
+      else if (navGroups.some((group) => group.items.some((item) => item.id === hash))) setView(hash);
     }, 0);
     return () => window.clearTimeout(timer);
   }, []);
@@ -137,15 +154,23 @@ export function PrepHub() {
   }, [notes]);
   useEffect(() => { window.localStorage.setItem("irap-estimates", JSON.stringify({ scenario, estimates })); }, [scenario, estimates]);
   useEffect(() => { document.documentElement.dataset.theme = theme; window.localStorage.setItem("irap-workspace-v2", JSON.stringify({ theme, assumptions, documentStages, customActions })); }, [theme, assumptions, documentStages, customActions]);
+  useEffect(() => { document.documentElement.dataset.readingSize=readingSize; document.documentElement.dataset.readingWidth=readingWidth; document.documentElement.dataset.reducedMotion=String(reducedMotion); window.localStorage.setItem("irap-reading-v1",JSON.stringify({size:readingSize,width:readingWidth,reducedMotion})); },[readingSize,readingWidth,reducedMotion]);
+  useEffect(() => { window.localStorage.setItem("irap-navigation-v1",JSON.stringify({collapsedGroups,lastView:resumeView,checkProgress})); },[collapsedGroups,resumeView,checkProgress]);
   useEffect(() => { const onKey = (event: KeyboardEvent) => { if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") { event.preventDefault(); setCommandOpen((open) => !open); } if (event.key === "Escape") setCommandOpen(false); }; window.addEventListener("keydown", onKey); return () => window.removeEventListener("keydown", onKey); }, []);
+  useEffect(()=>{const onPop=()=>{const id=window.location.pathname.split("/").filter(Boolean)[0] as ViewId;if(navGroups.some(group=>group.items.some(item=>item.id===id)))setView(id);else setView("overview");};window.addEventListener("popstate",onPop);return()=>window.removeEventListener("popstate",onPop)},[]);
+  useEffect(()=>{const timer=window.setTimeout(()=>{const root=document.getElementById("main-workspace");if(!root)return;const boxes=Array.from(root.querySelectorAll<HTMLInputElement>('input[type="checkbox"]'));let saved:boolean[]=[];try{saved=JSON.parse(window.localStorage.getItem(`irap-checks-${view}`)??"[]")}catch{/* ignore */}boxes.forEach((box,index)=>{box.checked=saved[index]??false});setCheckProgress(current=>({...current,[view]:saved.filter(Boolean).length}));},0);return()=>window.clearTimeout(timer)},[view]);
+  useEffect(()=>{const update=()=>{const root=document.getElementById("main-workspace");if(!root)return;const rect=root.getBoundingClientRect();const total=Math.max(1,root.scrollHeight-window.innerHeight+90);setReadingProgress(Math.max(0,Math.min(100,Math.round((-rect.top+90)/total*100))));const sections=Array.from(root.querySelectorAll<HTMLElement>("[id]"));const current=sections.filter(section=>section.getBoundingClientRect().top<=170).at(-1);setActiveSection(current?.id.replaceAll("-"," ")??"");};update();window.addEventListener("scroll",update,{passive:true});return()=>window.removeEventListener("scroll",update)},[view]);
 
   function navigate(id: ViewId) {
     setView(id);
     setMobileOpen(false);
     setSearch("");
-    window.history.replaceState(null, "", `#${id}`);
+    setResumeView(id);
+    window.history.pushState(null, "", id === "overview" ? "/" : `/${id}`);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
+
+  function saveChecks() { const root=document.getElementById("main-workspace");if(!root)return;const values=Array.from(root.querySelectorAll<HTMLInputElement>('input[type="checkbox"]')).map(box=>box.checked);window.localStorage.setItem(`irap-checks-${view}`,JSON.stringify(values));setCheckProgress(current=>({...current,[view]:values.filter(Boolean).length})); }
 
   function cycleTask(id: string) {
     setStatuses((current) => {
@@ -179,10 +204,10 @@ export function PrepHub() {
         <nav aria-label="Application sections">
           {navGroups.map((group) => (
             <div className="nav-group" key={group.label}>
-              <p>{group.label}</p>
-              {group.items.map((item) => (
+              <button className="nav-group-toggle" onClick={()=>setCollapsedGroups(current=>current.includes(group.label)?current.filter(label=>label!==group.label):[...current,group.label])} aria-expanded={!collapsedGroups.includes(group.label)}><span>{group.label}</span><b>{collapsedGroups.includes(group.label)?"＋":"−"}</b></button>
+              {!collapsedGroups.includes(group.label)&&group.items.map((item) => (
                 <button key={item.id} className={cx("nav-item", view === item.id && "active")} onClick={() => navigate(item.id)}>
-                  <span>{item.index}</span>{item.label}
+                  <span>{item.index}</span>{item.label}{(checkProgress[item.id]??0)>0&&<em>{checkProgress[item.id]}</em>}
                 </button>
               ))}
             </div>
@@ -200,6 +225,7 @@ export function PrepHub() {
           <button className="menu-button" onClick={() => setMobileOpen(true)} aria-label="Open menu">☰</button>
           <div className="breadcrumb"><span>IRAP /</span> {currentLabel}</div>
           <div className="top-actions">
+            {resumeView&&resumeView!==view&&<button className="resume-button" onClick={()=>navigate(resumeView)}>Resume {navGroups.flatMap(group=>group.items).find(item=>item.id===resumeView)?.label} →</button>}
             <div className="search-wrap">
               <label>
                 <span>⌕</span>
@@ -213,12 +239,13 @@ export function PrepHub() {
             </div>
             <button className="icon-button" onClick={() => setCommandOpen(true)} aria-label="Open command palette">⌘K</button>
             <button className="icon-button" onClick={() => setTheme((current) => current === "light" ? "dark" : "light")} aria-label={`Use ${theme === "light" ? "dark" : "light"} theme`}>{theme === "light" ? "◐" : "☀"}</button>
+            <button className="icon-button reading-button" onClick={()=>setReadingOpen(open=>!open)} aria-label="Reading preferences">Aa</button>
             <button className="secondary-button" onClick={() => window.print()}>Print brief</button>
             <button className="primary-button" onClick={() => { setMeetingSlide(0); setMeetingMode(true); }}>Start meeting mode</button>
           </div>
         </header>
 
-        <div className="workspace" id="main-workspace" data-view={view} key={view} tabIndex={-1}>
+        <div className="workspace" id="main-workspace" data-view={view} key={view} tabIndex={-1} onChangeCapture={saveChecks}>
           {view === "overview" && <Overview readiness={readiness} completed={completed} navigate={navigate} countdown={countdown} statuses={statuses} cycleTask={cycleTask} />}
           {view === "business" && <BusinessCase />}
           {view === "founder-research" && <FounderResearch />}
@@ -238,6 +265,9 @@ export function PrepHub() {
           {view === "actions" && <ActionCentre statuses={statuses} cycleTask={cycleTask} notes={notes} setNotes={setNotes} customActions={customActions} setCustomActions={setCustomActions} />}
         </div>
       </main>
+
+      {readingOpen&&<aside className="reading-panel"><header><div><span>Reading preferences</span><strong>Make the hub comfortable</strong></div><button onClick={()=>setReadingOpen(false)}>×</button></header><label>Text size<div>{(["normal","large","xlarge"] as ReadingSize[]).map(size=><button className={readingSize===size?"active":""} key={size} onClick={()=>setReadingSize(size)}>{size}</button>)}</div></label><label>Reading width<div>{(["wide","focused"] as ReadingWidth[]).map(width=><button className={readingWidth===width?"active":""} key={width} onClick={()=>setReadingWidth(width)}>{width}</button>)}</div></label><label className="motion-setting"><span>Reduce animation</span><input type="checkbox" checked={reducedMotion} onChange={event=>setReducedMotion(event.target.checked)}/><i/></label></aside>}
+      <nav className="reading-navigator" aria-label="Reading progress"><div><i style={{width:`${readingProgress}%`}}/></div><span>{activeSection||currentLabel}</span><strong>{readingProgress}%</strong><button onClick={()=>window.scrollTo({top:0,behavior:reducedMotion?"auto":"smooth"})}>↑ Top</button><button onClick={()=>{const all=navGroups.flatMap(group=>group.items);const index=all.findIndex(item=>item.id===view);navigate(all[Math.max(0,index-1)]?.id??"overview")}} disabled={view==="overview"}>←</button><button onClick={()=>{const all=navGroups.flatMap(group=>group.items);const index=all.findIndex(item=>item.id===view);navigate(all[Math.min(all.length-1,index+1)]?.id??view)}} disabled={view===navGroups.at(-1)?.items.at(-1)?.id}>→</button></nav>
 
       {meetingMode && (
         <div className="meeting-overlay" role="dialog" aria-modal="true" aria-label="Meeting presentation mode">
