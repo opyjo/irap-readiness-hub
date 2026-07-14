@@ -11,6 +11,7 @@ import {
   type ViewId,
 } from "./data";
 import { documentCategories, irapDocuments, type IrapDocument } from "./irapDocuments";
+import { Explainer } from "./Explainer";
 import { cad, calculate, defaults, normalize, type EstimateInputs, type ScenarioId } from "./estimates";
 import { defaultAssumptions, type Assumption, type AssumptionStatus } from "./assumptions";
 
@@ -217,6 +218,7 @@ export function PrepHub() {
           {view === "overview" && <Overview readiness={readiness} completed={completed} navigate={navigate} countdown={countdown} statuses={statuses} cycleTask={cycleTask} />}
           {view === "business" && <BusinessCase />}
           {view === "engine" && <Engine />}
+          {view === "explainer" && <Explainer />}
           {view === "architecture" && <Architecture />}
           {view === "research" && <Research />}
           {view === "funding" && <Funding />}
