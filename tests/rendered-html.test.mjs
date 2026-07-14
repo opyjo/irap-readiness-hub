@@ -27,6 +27,7 @@ test("server-renders the complete IRAP readiness application", async () => {
   assert.match(html, /Connect your app/);
   assert.match(html, /Owner runbook/);
   assert.match(html, /Founder research/);
+  assert.match(html, /Founder pitch toolkit/);
   assert.doesNotMatch(html, /codex-preview|Your site is taking shape|react-loading-skeleton/i);
 });
 
@@ -48,6 +49,7 @@ test("includes business, technical, research and funding workspaces", async () =
   assert.match(component, /view === "integration" && <IntegrationGuide/);
   assert.match(component, /view === "runbook" && <OwnerRunbook/);
   assert.match(component, /view === "founder-research" && <FounderResearch/);
+  assert.match(component, /view === "pitch-toolkit" && <PitchToolkit/);
   assert.match(data, /Learner model under sparse data/);
   assert.match(data, /What would IRAP accelerate/);
   assert.match(css, /prefers-reduced-motion/);
