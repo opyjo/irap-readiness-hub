@@ -61,6 +61,8 @@ test("renders the interactive architecture atlas directly", async () => {
   assert.match(html, /Complete ecosystem/);
   assert.match(html, /Data and privacy boundary/);
   assert.match(html, /Present the right story/);
+  assert.match(html, /Play the story/);
+  assert.match(html, /Now follow/);
 });
 
 test("includes business, technical, research and funding workspaces", async () => {
