@@ -3,6 +3,7 @@ export type ViewId =
   | "business"
   | "engine"
   | "explainer"
+  | "integration"
   | "architecture"
   | "research"
   | "funding"
@@ -29,20 +30,21 @@ export const navGroups: Array<{
     items: [
       { id: "engine", label: "How it works", index: "02" },
       { id: "explainer", label: "Adaptive engine explained", index: "03" },
-      { id: "architecture", label: "Technical system", index: "04" },
-      { id: "research", label: "R&D programme", index: "05" },
+      { id: "integration", label: "Connect your app", index: "04" },
+      { id: "architecture", label: "Technical system", index: "05" },
+      { id: "research", label: "R&D programme", index: "06" },
     ],
   },
   {
     label: "IRAP readiness",
     items: [
-      { id: "funding", label: "Funding case", index: "06" },
-      { id: "estimates", label: "Estimates", index: "07" },
-      { id: "assumptions", label: "Assumptions register", index: "08" },
-      { id: "guidance", label: "NRC IRAP guidance", index: "09" },
-      { id: "documents", label: "Document vault", index: "10" },
-      { id: "call", label: "Meeting room", index: "11" },
-      { id: "actions", label: "Action centre", index: "12" },
+      { id: "funding", label: "Funding case", index: "07" },
+      { id: "estimates", label: "Estimates", index: "08" },
+      { id: "assumptions", label: "Assumptions register", index: "09" },
+      { id: "guidance", label: "NRC IRAP guidance", index: "10" },
+      { id: "documents", label: "Document vault", index: "11" },
+      { id: "call", label: "Meeting room", index: "12" },
+      { id: "actions", label: "Action centre", index: "13" },
     ],
   },
 ];
