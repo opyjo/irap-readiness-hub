@@ -1,20 +1,19 @@
-# IRAP Readiness Hub
+# Opyjo Adaptive Engine Console
 
-A private executive preparation application for Opyjo Consulting's Adaptive
-Engine business case, technical architecture, R&D programme and NRC IRAP
-advisor meeting.
+An Ontario-first, Canadian B2B adaptive-learning engine console for education
+platforms and publishers. The previous IRAP preparation material remains in the
+repository as internal planning documentation.
 
 ## What it includes
 
-- executive readiness dashboard and live meeting countdown;
-- detailed business model, customer segments, commercialization and KPIs;
-- adaptive-engine learner model, selection policy and worked example;
-- technical architecture, request lifecycle, data model and security boundary;
-- four research work packages with uncertainty, method, evidence and outcomes;
-- current official NRC IRAP guidance and a corrected technical-project budget;
-- advisor Q&A, presentation mode and questions to ask;
-- persistent device-local action tracker and meeting notes;
-- responsive, reduced-motion and printable layouts.
+- versioned Ontario Grades 1–8 mathematics curriculum graph;
+- multi-concept content mapping and empirical item calibration;
+- diagnostic, practice, remediation and review sessions;
+- probabilistic learner mastery, confidence and retention risk;
+- explainable, versioned recommendations with educator overrides;
+- content-quality, curriculum-coverage and privacy-safe cohort analytics;
+- Canadian-region, bilingual and accountable model-governance controls;
+- native API integration surface with an additive v2 contract.
 
 ## Local development
 
