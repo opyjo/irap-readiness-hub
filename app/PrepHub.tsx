@@ -14,6 +14,7 @@ import { documentCategories, irapDocuments, type IrapDocument } from "./irapDocu
 import { Explainer } from "./Explainer";
 import { IntegrationGuide } from "./IntegrationGuide";
 import { OwnerRunbook } from "./OwnerRunbook";
+import { FounderResearch } from "./FounderResearch";
 import { cad, calculate, defaults, normalize, type EstimateInputs, type ScenarioId } from "./estimates";
 import { defaultAssumptions, type Assumption, type AssumptionStatus } from "./assumptions";
 
@@ -219,6 +220,7 @@ export function PrepHub() {
         <div className="workspace" id="main-workspace" data-view={view} key={view} tabIndex={-1}>
           {view === "overview" && <Overview readiness={readiness} completed={completed} navigate={navigate} countdown={countdown} statuses={statuses} cycleTask={cycleTask} />}
           {view === "business" && <BusinessCase />}
+          {view === "founder-research" && <FounderResearch />}
           {view === "engine" && <Engine />}
           {view === "explainer" && <Explainer />}
           {view === "integration" && <IntegrationGuide />}

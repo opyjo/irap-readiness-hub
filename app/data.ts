@@ -1,6 +1,7 @@
 export type ViewId =
   | "overview"
   | "business"
+  | "founder-research"
   | "engine"
   | "explainer"
   | "integration"
@@ -24,29 +25,30 @@ export const navGroups: Array<{
     items: [
       { id: "overview", label: "Command centre", index: "00" },
       { id: "business", label: "Business case", index: "01" },
+      { id: "founder-research", label: "Founder research", index: "02" },
     ],
   },
   {
     label: "The product",
     items: [
-      { id: "engine", label: "How it works", index: "02" },
-      { id: "explainer", label: "Adaptive engine explained", index: "03" },
-      { id: "integration", label: "Connect your app", index: "04" },
-      { id: "runbook", label: "Owner runbook", index: "05" },
-      { id: "architecture", label: "Technical system", index: "06" },
-      { id: "research", label: "R&D programme", index: "07" },
+      { id: "engine", label: "How it works", index: "03" },
+      { id: "explainer", label: "Adaptive engine explained", index: "04" },
+      { id: "integration", label: "Connect your app", index: "05" },
+      { id: "runbook", label: "Owner runbook", index: "06" },
+      { id: "architecture", label: "Technical system", index: "07" },
+      { id: "research", label: "R&D programme", index: "08" },
     ],
   },
   {
     label: "IRAP readiness",
     items: [
-      { id: "funding", label: "Funding case", index: "08" },
-      { id: "estimates", label: "Estimates", index: "09" },
-      { id: "assumptions", label: "Assumptions register", index: "10" },
-      { id: "guidance", label: "NRC IRAP guidance", index: "11" },
-      { id: "documents", label: "Document vault", index: "12" },
-      { id: "call", label: "Meeting room", index: "13" },
-      { id: "actions", label: "Action centre", index: "14" },
+      { id: "funding", label: "Funding case", index: "09" },
+      { id: "estimates", label: "Estimates", index: "10" },
+      { id: "assumptions", label: "Assumptions register", index: "11" },
+      { id: "guidance", label: "NRC IRAP guidance", index: "12" },
+      { id: "documents", label: "Document vault", index: "13" },
+      { id: "call", label: "Meeting room", index: "14" },
+      { id: "actions", label: "Action centre", index: "15" },
     ],
   },
 ];
