@@ -28,6 +28,7 @@ test("server-renders the complete IRAP readiness application", async () => {
   assert.match(html, /Owner runbook/);
   assert.match(html, /Founder research/);
   assert.match(html, /Founder pitch toolkit/);
+  assert.match(html, /Going all in/);
   assert.doesNotMatch(html, /codex-preview|Your site is taking shape|react-loading-skeleton/i);
 });
 
@@ -39,6 +40,16 @@ test("supports shareable workspace URLs and reading navigation", async () => {
   assert.match(html, /Reading preferences/);
   assert.match(html, /Reading progress/);
   assert.match(html, /Founder pitch toolkit/);
+});
+
+test("renders the animated founder field guide directly", async () => {
+  const response = await render("/field-guide");
+  assert.equal(response.status, 200);
+  const html = await response.text();
+  assert.match(html, /Go all in—smart/);
+  assert.match(html, /Dogfood first\. Sell second/);
+  assert.match(html, /The journey, in order/);
+  assert.match(html, /A short reading trail/);
 });
 
 test("includes business, technical, research and funding workspaces", async () => {
@@ -60,6 +71,7 @@ test("includes business, technical, research and funding workspaces", async () =
   assert.match(component, /view === "runbook" && <OwnerRunbook/);
   assert.match(component, /view === "founder-research" && <FounderResearch/);
   assert.match(component, /view === "pitch-toolkit" && <PitchToolkit/);
+  assert.match(component, /view === "field-guide" && <FounderFieldGuide/);
   assert.match(data, /Learner model under sparse data/);
   assert.match(data, /What would IRAP accelerate/);
   assert.match(css, /prefers-reduced-motion/);

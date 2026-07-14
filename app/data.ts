@@ -3,6 +3,7 @@ export type ViewId =
   | "business"
   | "founder-research"
   | "pitch-toolkit"
+  | "field-guide"
   | "engine"
   | "explainer"
   | "integration"
@@ -28,29 +29,30 @@ export const navGroups: Array<{
       { id: "business", label: "Business case", index: "01" },
       { id: "founder-research", label: "Founder research", index: "02" },
       { id: "pitch-toolkit", label: "Founder pitch toolkit", index: "03" },
+      { id: "field-guide", label: "Going all in", index: "04" },
     ],
   },
   {
     label: "The product",
     items: [
-      { id: "engine", label: "How it works", index: "04" },
-      { id: "explainer", label: "Adaptive engine explained", index: "05" },
-      { id: "integration", label: "Connect your app", index: "06" },
-      { id: "runbook", label: "Owner runbook", index: "07" },
-      { id: "architecture", label: "Technical system", index: "08" },
-      { id: "research", label: "R&D programme", index: "09" },
+      { id: "engine", label: "How it works", index: "05" },
+      { id: "explainer", label: "Adaptive engine explained", index: "06" },
+      { id: "integration", label: "Connect your app", index: "07" },
+      { id: "runbook", label: "Owner runbook", index: "08" },
+      { id: "architecture", label: "Technical system", index: "09" },
+      { id: "research", label: "R&D programme", index: "10" },
     ],
   },
   {
     label: "IRAP readiness",
     items: [
-      { id: "funding", label: "Funding case", index: "10" },
-      { id: "estimates", label: "Estimates", index: "11" },
-      { id: "assumptions", label: "Assumptions register", index: "12" },
-      { id: "guidance", label: "NRC IRAP guidance", index: "13" },
-      { id: "documents", label: "Document vault", index: "14" },
-      { id: "call", label: "Meeting room", index: "15" },
-      { id: "actions", label: "Action centre", index: "16" },
+      { id: "funding", label: "Funding case", index: "11" },
+      { id: "estimates", label: "Estimates", index: "12" },
+      { id: "assumptions", label: "Assumptions register", index: "13" },
+      { id: "guidance", label: "NRC IRAP guidance", index: "14" },
+      { id: "documents", label: "Document vault", index: "15" },
+      { id: "call", label: "Meeting room", index: "16" },
+      { id: "actions", label: "Action centre", index: "17" },
     ],
   },
 ];

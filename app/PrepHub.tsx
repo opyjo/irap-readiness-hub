@@ -16,6 +16,7 @@ import { IntegrationGuide } from "./IntegrationGuide";
 import { OwnerRunbook } from "./OwnerRunbook";
 import { FounderResearch } from "./FounderResearch";
 import { PitchToolkit } from "./PitchToolkit";
+import { FounderFieldGuide } from "./FounderFieldGuide";
 import { cad, calculate, defaults, normalize, type EstimateInputs, type ScenarioId } from "./estimates";
 import { defaultAssumptions, type Assumption, type AssumptionStatus } from "./assumptions";
 
@@ -250,6 +251,7 @@ export function PrepHub({ initialView = "overview" }: { initialView?: ViewId }) 
           {view === "business" && <BusinessCase />}
           {view === "founder-research" && <FounderResearch />}
           {view === "pitch-toolkit" && <PitchToolkit />}
+          {view === "field-guide" && <FounderFieldGuide />}
           {view === "engine" && <Engine />}
           {view === "explainer" && <Explainer />}
           {view === "integration" && <IntegrationGuide />}
