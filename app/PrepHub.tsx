@@ -13,6 +13,7 @@ import {
 import { documentCategories, irapDocuments, type IrapDocument } from "./irapDocuments";
 import { Explainer } from "./Explainer";
 import { IntegrationGuide } from "./IntegrationGuide";
+import { OwnerRunbook } from "./OwnerRunbook";
 import { cad, calculate, defaults, normalize, type EstimateInputs, type ScenarioId } from "./estimates";
 import { defaultAssumptions, type Assumption, type AssumptionStatus } from "./assumptions";
 
@@ -221,6 +222,7 @@ export function PrepHub() {
           {view === "engine" && <Engine />}
           {view === "explainer" && <Explainer />}
           {view === "integration" && <IntegrationGuide />}
+          {view === "runbook" && <OwnerRunbook />}
           {view === "architecture" && <Architecture />}
           {view === "research" && <Research />}
           {view === "funding" && <Funding />}
