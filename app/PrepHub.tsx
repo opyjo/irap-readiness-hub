@@ -101,6 +101,7 @@ export function PrepHub({ initialView = "overview" }: { initialView?: ViewId }) 
   const [search, setSearch] = useState("");
   const [meetingMode, setMeetingMode] = useState(false);
   const [meetingSlide, setMeetingSlide] = useState(0);
+  const [prompterSize, setPrompterSize] = useState<"compact" | "standard" | "large">("standard");
   const [statuses, setStatuses] = useState<Record<string, TaskStatus>>(() =>
     Object.fromEntries(prepTasks.map((task) => [task.id, task.initialStatus])),
   );
@@ -159,6 +160,7 @@ export function PrepHub({ initialView = "overview" }: { initialView?: ViewId }) 
   useEffect(() => { document.documentElement.dataset.readingSize=readingSize; document.documentElement.dataset.readingWidth=readingWidth; document.documentElement.dataset.reducedMotion=String(reducedMotion); window.localStorage.setItem("irap-reading-v1",JSON.stringify({size:readingSize,width:readingWidth,reducedMotion})); },[readingSize,readingWidth,reducedMotion]);
   useEffect(() => { window.localStorage.setItem("irap-navigation-v1",JSON.stringify({collapsedGroups,lastView:resumeView,checkProgress})); },[collapsedGroups,resumeView,checkProgress]);
   useEffect(() => { const onKey = (event: KeyboardEvent) => { if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") { event.preventDefault(); setCommandOpen((open) => !open); } if (event.key === "Escape") setCommandOpen(false); }; window.addEventListener("keydown", onKey); return () => window.removeEventListener("keydown", onKey); }, []);
+  useEffect(() => { if (!meetingMode) return; const onKey = (event: KeyboardEvent) => { if (["ArrowRight", "PageDown", " "].includes(event.key)) { event.preventDefault(); setMeetingSlide((slide) => Math.min(callQuestions.length, slide + 1)); } if (["ArrowLeft", "PageUp"].includes(event.key)) { event.preventDefault(); setMeetingSlide((slide) => Math.max(0, slide - 1)); } if (event.key === "Escape") setMeetingMode(false); }; window.addEventListener("keydown", onKey); return () => window.removeEventListener("keydown", onKey); }, [meetingMode]);
   useEffect(()=>{const onPop=()=>{const id=window.location.pathname.split("/").filter(Boolean)[0] as ViewId;if(navGroups.some(group=>group.items.some(item=>item.id===id)))setView(id);else setView("overview");};window.addEventListener("popstate",onPop);return()=>window.removeEventListener("popstate",onPop)},[]);
   useEffect(()=>{const timer=window.setTimeout(()=>{const root=document.getElementById("main-workspace");if(!root)return;const boxes=Array.from(root.querySelectorAll<HTMLInputElement>('input[type="checkbox"]'));let saved:boolean[]=[];try{saved=JSON.parse(window.localStorage.getItem(`irap-checks-${view}`)??"[]")}catch{/* ignore */}boxes.forEach((box,index)=>{box.checked=saved[index]??false});setCheckProgress(current=>({...current,[view]:saved.filter(Boolean).length}));},0);return()=>window.clearTimeout(timer)},[view]);
   useEffect(()=>{const update=()=>{const root=document.getElementById("main-workspace");if(!root)return;const rect=root.getBoundingClientRect();const total=Math.max(1,root.scrollHeight-window.innerHeight+90);setReadingProgress(Math.max(0,Math.min(100,Math.round((-rect.top+90)/total*100))));const sections=Array.from(root.querySelectorAll<HTMLElement>("[id]"));const current=sections.filter(section=>section.getBoundingClientRect().top<=170).at(-1);setActiveSection(current?.id.replaceAll("-"," ")??"");};update();window.addEventListener("scroll",update,{passive:true});return()=>window.removeEventListener("scroll",update)},[view]);
@@ -274,29 +276,31 @@ export function PrepHub({ initialView = "overview" }: { initialView?: ViewId }) 
       <nav className="reading-navigator" aria-label="Reading progress"><div><i style={{width:`${readingProgress}%`}}/></div><span>{activeSection||currentLabel}</span><strong>{readingProgress}%</strong><button onClick={()=>window.scrollTo({top:0,behavior:reducedMotion?"auto":"smooth"})}>↑ Top</button><button onClick={()=>{const all=navGroups.flatMap(group=>group.items);const index=all.findIndex(item=>item.id===view);navigate(all[Math.max(0,index-1)]?.id??"overview")}} disabled={view==="overview"}>←</button><button onClick={()=>{const all=navGroups.flatMap(group=>group.items);const index=all.findIndex(item=>item.id===view);navigate(all[Math.min(all.length-1,index+1)]?.id??view)}} disabled={view===navGroups.at(-1)?.items.at(-1)?.id}>→</button></nav>
 
       {meetingMode && (
-        <div className="meeting-overlay" role="dialog" aria-modal="true" aria-label="Meeting presentation mode">
+        <div className={`meeting-overlay prompter-${prompterSize}`} role="dialog" aria-modal="true" aria-label="IRAP teleprompter">
           <div className="meeting-toolbar">
-            <span>IRAP conversation guide · {meetingSlide + 1} / {callQuestions.length + 1}</span>
-            <button onClick={() => setMeetingMode(false)}>Exit</button>
+            <span><b>LIVE BRIEF</b> {meetingSlide === 0 ? "Opening" : callQuestions[meetingSlide - 1]?.category} · {meetingSlide + 1} / {callQuestions.length + 1}</span>
+            <div><button onClick={() => setPrompterSize((size) => size === "compact" ? "standard" : size === "standard" ? "large" : "compact")} aria-label="Change teleprompter text size">Aa</button><button onClick={() => setMeetingMode(false)}>Exit · Esc</button></div>
           </div>
           <div className="meeting-stage">
             {meetingSlide === 0 ? (
               <div className="meeting-card opener-card">
-                <span className="meeting-kicker">Opening statement</span>
-                <h2>We have built the foundation.<br />The R&D question is what comes next.</h2>
-                <p>Opyjo operates live learning products and has now built a standalone adaptive-learning service. The service is code-complete and locally validated. We are preparing production deployment and seeking support for the uncertain learner-model, calibration and outcome-measurement work required to turn it into defensible Canadian learning infrastructure.</p>
+                <span className="meeting-kicker">Say this first · 45 seconds</span>
+                <h2>We built the foundation.<br />Now we must prove the learning science.</h2>
+                <p>“I’m Johnson, founder of Opyjo Consulting in Ontario. We operate learning products and have built the foundation of a standalone adaptive-learning API. The service is code-complete and locally validated. The R&D challenge is making the learner model reliable from sparse data, safely calibrating item difficulty, and proving that adaptation improves retained learning. I’d like your guidance on whether that programme fits IRAP and how to shape the technical project and evidence.”</p>
+                <aside className="prompter-cue"><strong>Then stop.</strong><span>Let Deepak choose the first thread. Do not lead with a funding amount.</span></aside>
               </div>
             ) : (
               <div className="meeting-card">
-                <span className="meeting-kicker">Likely advisor question</span>
+                <span className="meeting-kicker">Likely question · {callQuestions[meetingSlide - 1]?.category}</span>
                 <h2>{callQuestions[meetingSlide - 1]?.question}</h2>
-                <p>{callQuestions[meetingSlide - 1]?.answer}</p>
+                <p className="prompter-answer">“{callQuestions[meetingSlide - 1]?.answer}”</p>
+                <div className="prompter-support"><div><span>If they ask for detail</span><ul>{callQuestions[meetingSlide - 1]?.proof.map((point) => <li key={point}>{point}</li>)}</ul></div><aside><span>Guardrail</span><p>{callQuestions[meetingSlide - 1]?.caution}</p></aside></div>
               </div>
             )}
           </div>
           <div className="meeting-controls">
             <button disabled={meetingSlide === 0} onClick={() => setMeetingSlide((slide) => Math.max(0, slide - 1))}>← Previous</button>
-            <div>{Array.from({ length: callQuestions.length + 1 }, (_, index) => <i className={index === meetingSlide ? "active" : ""} key={index} />)}</div>
+            <div><span>← → or space to move</span><i style={{width:`${(meetingSlide + 1) / (callQuestions.length + 1) * 100}%`}} /></div>
             <button disabled={meetingSlide === callQuestions.length} onClick={() => setMeetingSlide((slide) => Math.min(callQuestions.length, slide + 1))}>Next →</button>
           </div>
         </div>
@@ -905,13 +909,15 @@ function CallRoom({ notes, setNotes, startMeeting, addAction }: { notes: string;
   const [followup,setFollowup]=useState({title:"",detail:"",owner:"Johnson",due:"Next follow-up"}); const [added,setAdded]=useState(false);
   return (
     <>
-      <SectionHeader eyebrow="Advisor meeting room" title="Answer precisely. Stop before overclaiming." description="Use the short answer first, then let the advisor pull for detail. The strongest story separates what is built, what is operationally next, and what remains genuinely uncertain." />
+      <SectionHeader eyebrow="Tomorrow · IRAP advisor call" title="Your meeting teleprompter." description={`${callQuestions.length} likely questions, ordered around the R&D case. Read the short answer, stop, and use the supporting cues only when Deepak asks for more.`} />
+      <section className="meeting-ready-strip"><div><span>01</span><strong>Lead with R&D uncertainty</strong><small>Not the funding request</small></div><div><span>02</span><strong>Separate built from unproven</strong><small>Local validation is not outcome evidence</small></div><div><span>03</span><strong>Use exact company facts</strong><small>No guessing on T4, cash, revenue or ownership</small></div><button onClick={startMeeting}>Start teleprompter <b>→</b></button></section>
       <section className="opener">
         <div><span>Recommended opener · ~45 seconds</span><blockquote>“I’m Johnson, founder of Opyjo Consulting in Ontario. We operate learning products and have built the foundation of a standalone adaptive-learning API. The service is code-complete and locally validated; production deployment and Brightwick shadow testing are next. The research challenge is making the learner model reliable from sparse data and proving that adaptation improves retained learning. I’d like to understand whether that R&D programme fits IRAP and how to shape the technical project and evidence.”</blockquote></div>
-        <button onClick={startMeeting}>Present conversation guide</button>
+        <button onClick={startMeeting}>Open full-screen teleprompter</button>
       </section>
+      <section className="fact-check surface"><div className="surface-heading"><div><span>Fill these in before the call</span><h3>Six facts the teleprompter cannot safely invent</h3></div><Badge tone="red">Verify today</Badge></div><div>{["Legal corporation name, jurisdiction and incorporation date","Exact ownership and any related companies","Non-founder / non-executive full-time T4 headcount","Names and roles of Canadian in-house R&D staff","Current revenue, cash runway and external investment","IP assignments for employees and contractors"].map((item, index)=><label key={item}><input type="checkbox"/><i>{String(index+1).padStart(2,"0")}</i><span>{item}</span></label>)}</div></section>
       <section className="qa-list">
-        {callQuestions.map((item, index) => <details key={item.question} open={index < 2}><summary><span>{String(index + 1).padStart(2, "0")}</span><strong>{item.question}</strong><i>＋</i></summary><p>{item.answer}</p></details>)}
+        {callQuestions.map((item, index) => <details key={item.question} open={index < 3}><summary><span>{String(index + 1).padStart(2, "0")}</span><strong><small>{item.category}</small>{item.question}</strong><i>＋</i></summary><div className="qa-answer"><p>{item.answer}</p><ul>{item.proof.map(point=><li key={point}>{point}</li>)}</ul><aside><strong>Guardrail</strong>{item.caution}</aside></div></details>)}
       </section>
       <section className="content-grid equal">
         <article className="surface"><div className="surface-heading"><div><span>Questions for the advisor</span><h3>Use the meeting to reduce uncertainty</h3></div></div><ol className="question-list"><li>Does this learner-model and outcome-measurement programme fit the technical project criteria?</li><li>Which labour and project-specific costs should be included or excluded?</li><li>What evidence of management, payroll and financial capacity should we prepare?</li><li>When could an eligible project begin, and what costs must wait for an agreement?</li><li>What milestones would make the project compelling for the current planning cycle?</li><li>Could Youth Employment support apply to a qualifying technical hire?</li></ol></article>
