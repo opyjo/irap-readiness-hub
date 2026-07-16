@@ -48,12 +48,12 @@ export const navGroups: Array<{
   {
     label: "IRAP readiness",
     items: [
-      { id: "funding", label: "Funding case", index: "12" },
-      { id: "estimates", label: "Estimates", index: "13" },
-      { id: "assumptions", label: "Assumptions register", index: "14" },
-      { id: "guidance", label: "NRC IRAP guidance", index: "15" },
-      { id: "documents", label: "Document vault", index: "16" },
-      { id: "call", label: "Meeting room", index: "17" },
+      { id: "call", label: "Meeting teleprompter", index: "12" },
+      { id: "funding", label: "Funding case", index: "13" },
+      { id: "estimates", label: "Estimates", index: "14" },
+      { id: "assumptions", label: "Assumptions register", index: "15" },
+      { id: "guidance", label: "NRC IRAP guidance", index: "16" },
+      { id: "documents", label: "Document vault", index: "17" },
       { id: "actions", label: "Action centre", index: "18" },
     ],
   },
